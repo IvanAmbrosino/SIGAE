@@ -1,44 +1,131 @@
 # SIGAE
 Sistema Integral de Gestion de Actividades Espaciales
 
-SIGAE es una plataforma integral diseñada para planificar, gestionar y supervisar actividades espaciales. Su enfoque modular y escalable permite a las agencias espaciales y organizaciones relacionadas coordinar operaciones complejas de manera eficiente, precisa y segura.
+## 🛰️ Resumen Ejecutivo
 
-## 🌌 Características principales
+**Nombre del Proyecto:**  
+Sistema de Gestión de Planificación, Control y Monitoreo de Actividades Espaciales (SIGAE)
 
-- **Planificación de Actividades Espaciales:** Herramientas visuales e inteligentes para programar tareas orbitales, mantenimientos, lanzamientos y más.
-- **Gestión de Recursos:** Asignación y seguimiento de personal, equipamiento y satélites.
-- **Monitoreo en Tiempo Real:** Visualización del estado actual de las misiones y actividades espaciales.
-- **Control de Conflictos:** Detección automática de conflictos de agenda, uso de recursos y trayectorias orbitales.
-- **Reportes e Historial:** Registro detallado de eventos, cambios y resultados para análisis posteriores.
-- **Interfaz amigable:** Acceso web responsivo con dashboards claros e intuitivos.
+**Objetivo:**  
+Optimizar la gestión de actividades espaciales mediante la integración de herramientas de planificación, control de antenas y visualización de información satelital.
 
-## ⚙️ Tecnologías utilizadas
+**Componentes Clave:**
+- Módulo de planificación automatizada (Planner)
+- Integración con sistemas existentes (CONAE)
+- Interfaz web con dashboards y notificaciones
+- API RESTful para interoperabilidad con otros sistemas
 
-- **Frontend:** React.js, Tailwind CSS
-- **Backend:** Java (Spring Boot), Node.js (microservicios complementarios)
-- **Base de Datos:** PostgreSQL, MariaDB
-- **Autenticación:** JWT + OAuth2
-- **Visualización orbital:** CesiumJS / D3.js
+**Impacto Esperado:**
+- Mejora de la eficiencia en operaciones satelitales
+- Disminución de conflictos en el uso compartido de antenas
+- Trazabilidad completa en planificación y ejecución de tareas
 
-## 🚀 Público objetivo
+---
 
-- Agencias espaciales nacionales
-- Centros de control de satélites
-- Empresas aeroespaciales privadas
-- Instituciones académicas con programas espaciales
+## 📅 Detalle Técnico - Módulo Planner
 
-## 📦 Instalación
+El **Planner** es un componente esencial del `Ground Station Controller`. Permite:
 
-```bash
-# Clona el repositorio
-git clone https://github.com/tuusuario/sigae.git
-cd sigae
+### Funcionalidades Principales:
+- **Definición de tareas planificadas (Scheduled Tasks)** para actividades como:
+  - Seguimiento satelital
+  - Grabación
+  - Transmisión (Tx) / Recepción (Rx)
+  - Envío de comandos
 
-# Inicia los servicios backend
-cd backend
-./mvnw spring-boot:run
+### Cada tarea incluye:
+- Identificador único y nombre
+- Tiempo de inicio y duración
+- Frecuencia asignada, polarización, tipo de modulación
+- Restricciones de visibilidad (elevación mínima, zona de paso)
 
-# Inicia el frontend
-cd ../frontend
-npm install
-npm run dev
+### Modos de operación:
+- **Planificación regular:** ejecución automatizada según cronograma
+- **Modo simulación:** pruebas sin transmisión real, ideal para depuración
+
+### Capacidades adicionales:
+- Edición manual o automática (vía interfaz web o API)
+- Gestión de conflictos de recursos (ej. antenas ocupadas) según prioridad
+- Interfaz web intuitiva para la creación y seguimiento de tareas
+- Soporte para importación/exportación de planificaciones en formatos **JSON/XML**
+
+> 🔗 **Nota Importante:**  
+> Este módulo sirve como **interfaz clave** entre el sistema de gestión de CONAE y los controladores de estación terrena. El planificador debe poder **leer y escribir tareas** y sincronizar con la infraestructura física.
+
+---
+
+## 🏗️ Arquitectura General del Sistema
+
+### Frontend (Cliente Web)
+- **Tecnologías:** React + TailwindCSS o Material UI
+- **Funcionalidad:** Interfaz dinámica que consume APIs REST para mostrar:
+  - Tareas planificadas
+  - Estado de antenas
+  - Información satelital
+  - Paneles y dashboards
+
+### Backend (API RESTful / Microservicios)
+- **Framework:** FastAPI (asíncrono, rápido, con Swagger automático)
+- **Módulos separados:**
+  - Usuarios
+  - Planificación
+  - Antenas
+  - TLE (Two-Line Element)
+  - Notificaciones
+  - Tareas
+- **Tareas en segundo plano:** Celery + Redis (notificaciones, descarga de TLE, sincronización)
+
+### Base de Datos
+- **PostgreSQL:** Integridad referencial, manejo de JSON, timestamps, etc.
+- **Mariadb Galera Cluster:** Alta disponibilidad (HA), replicación de datos
+- **GlusterFS / Ceph:** Almacenamiento distribuido de alta disponibilidad
+
+### Servicio de Tareas Periódicas
+- Creación de servicios que consultan APIs externas o realizan cargas regulares de datos hacia las antenas.
+
+### Comunicación y Mensajería
+- **MailSender:** Envío de notificaciones y planificación a diferentes áreas operativas
+
+### Autenticación
+- **OAuth2 con JWT** o integración con Active Directory (SSO)
+- Roles y permisos gestionados por tipo de usuario
+
+---
+
+## ⚙️ Infraestructura
+
+- **Docker + Docker Compose:** Para entornos de desarrollo locales
+- **Kubernetes o Docker Swarm:** Para entornos de producción
+- **GitHub + Portainer:** Despliegue continuo y gestión visual de contenedores
+- **Proxy:** Balanceo de carga y ruteo dinámico de microservicios
+- **Entorno de nodos HA:** Proxmox + Ceph o GlusterFS
+
+---
+
+## 🧪 Frameworks y Tecnologías
+
+| Tipo             | Tecnología      | Justificación                               |
+|------------------|------------------|---------------------------------------------|
+| Backend API      | FastAPI          | Asíncrono, rápido, Swagger automático       |
+| Frontend         | React            | UI moderna y dinámica                       |
+| Autenticación    | OAuth2 / JWT     | Estándar de seguridad                       |
+| Base de Datos    | Mariadb Cluster  | Alta disponibilidad                         |
+| Base de Datos    | PostgreSQL       | Potente para relaciones complejas           |
+| Infraestructura  | Docker           | Despliegue replicable y portable            |
+| Backend Tareas   | Redis / Kafka    | Broker de mensajes en tiempo real           |
+
+---
+
+## 📋 Metodologías de Trabajo
+
+- **Scrum:** Organización ágil de sprints
+- **CI/CD:** Automatización de pruebas y despliegue
+- **Git / GitHub:** Control de versiones y ramas
+- **Testing:** TDD con PyTest y React Testing Library
+- **Documentación:** Swagger/OpenAPI + Storybook
+- **Colaboración:** Google Drive para documentos y plantillas
+
+---
+
+Desarrollado por el equipo SIGAE 🌍  
+Para más información, contactá con el equipo técnico o revisá la documentación en la carpeta `/docs`.
