@@ -1,10 +1,5 @@
 # SIGAE
-Sistema Integral de Gestion de Actividades Espaciales
-
-## 🛰️ Resumen Ejecutivo
-
-**Nombre del Proyecto:**  
-Sistema de Gestión de Planificación, Control y Monitoreo de Actividades Espaciales (SIGAE)
+Sistema de Gestión de Actividades Espaciales
 
 **Objetivo:**  
 Optimizar la gestión de actividades espaciales mediante la integración de herramientas de planificación, control de antenas y visualización de información satelital.
