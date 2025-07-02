@@ -1,0 +1,44 @@
+version: '3'
+x-proxy-env: &proxy-env
+  http_proxy: http://cuss_sys:c5%24%24pr4xy@10.0.100.200:3128
+  https_proxy: http://cuss_sys:c5%24%24pr4xy@10.0.100.200:3128
+  no_proxy: localhost,127.0.0.1,10.0.0.0/8,schema-registry
+services:
+  inbox-tle-publisher:
+    image: cgss-harbor.et.conae.gov.ar/etc/inbox-tle-publisher:latest
+    container_name: inbox-tle-publisher
+    hostname: inbox-tle-publisher
+    environment: *proxy-env
+    networks:
+      - kafka-net
+    volumes:
+      - /home/soporte/actualiza-tle/logs:/app/logs
+      - /home/soporte/actualiza-tle/configs/inbox-tle-config:/app/configs
+      - /home/soporte/actualiza-tle/password:/app/password
+  saocom-tle-publisher:
+    image: cgss-harbor.et.conae.gov.ar/etc/saocom-tle-publisher:0.2.1
+    container_name: saocom-tle-publisher
+    hostname: saocom-tle-publisher
+    environment: *proxy-env
+    networks:
+      - kafka-net
+    volumes:
+      - /home/soporte/actualiza-tle/tmp:/app/tmp
+      - /home/soporte/actualiza-tle/logs:/app/logs
+      - /home/soporte/actualiza-tle/configs/saocom-tle-config:/app/configs
+      - /home/soporte/actualiza-tle/password:/app/password
+  spacetrack-tle-publisher:
+    image: cgss-harbor.et.conae.gov.ar/etc/spacetrack-tle-publisher:0.2.2
+    container_name: space-track-tle-publisher
+    hostname: space-track-tle-publisher
+    environment: *proxy-env
+    networks:
+      - kafka-net
+    volumes:
+      - /home/soporte/actualiza-tle/tmp:/app/tmp
+      - /home/soporte/actualiza-tle/logs:/app/logs
+      - /home/soporte/actualiza-tle/configs/spacetrack-tle-config:/app/configs
+      - /home/soporte/actualiza-tle/password:/app/password
+networks:
+  kafka-net:
+    external: true

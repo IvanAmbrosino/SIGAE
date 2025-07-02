@@ -44,12 +44,12 @@ El **Planner** es un componente esencial del `Ground Station Controller`. Permit
 - Interfaz web intuitiva para la creación y seguimiento de tareas
 - Soporte para importación/exportación de planificaciones en formatos **JSON/XML**
 
-> 🔗 **Nota Importante:**  
+>  **Nota Importante:**  
 > Este módulo sirve como **interfaz clave** entre el sistema de gestión de CONAE y los controladores de estación terrena. El planificador debe poder **leer y escribir tareas** y sincronizar con la infraestructura física.
 
 ---
 
-## 🏗️ Arquitectura General del Sistema
+##  Arquitectura General del Sistema
 
 ### Frontend (Cliente Web)
 - **Tecnologías:** React + TailwindCSS o Material UI
@@ -87,7 +87,7 @@ El **Planner** es un componente esencial del `Ground Station Controller`. Permit
 
 ---
 
-## ⚙️ Infraestructura
+##  Infraestructura
 
 - **Docker + Docker Compose:** Para entornos de desarrollo locales
 - **Kubernetes o Docker Swarm:** Para entornos de producción
@@ -97,7 +97,7 @@ El **Planner** es un componente esencial del `Ground Station Controller`. Permit
 
 ---
 
-## 🧪 Frameworks y Tecnologías
+##  Frameworks y Tecnologías
 
 | Tipo             | Tecnología      | Justificación                               |
 |------------------|------------------|---------------------------------------------|
@@ -111,7 +111,7 @@ El **Planner** es un componente esencial del `Ground Station Controller`. Permit
 
 ---
 
-## 📋 Metodologías de Trabajo
+##  Metodologías de Trabajo
 
 - **Scrum:** Organización ágil de sprints
 - **CI/CD:** Automatización de pruebas y despliegue
@@ -122,5 +122,5 @@ El **Planner** es un componente esencial del `Ground Station Controller`. Permit
 
 ---
 
-Desarrollado por el equipo SIGAE 🌍  
+Desarrollado por el equipo SIGAE   
 Para más información, contactá con el equipo técnico o revisá la documentación en la carpeta `/docs`.

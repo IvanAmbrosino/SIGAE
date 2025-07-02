@@ -1,0 +1,41 @@
+{
+    "kafka_config":{
+        "bootstrap_servers": "kafka-broker-1:9092,kafka-broker-2:9092,kafka-broker-3:9092",
+        "schema_registry_url": "http://schema-registry:8081",
+        "schema_file": "tle_schema.json",
+        "group_id": "tle-publisher-group",
+        "client_id": "spacetrack-tle-publisher",
+        "auto_offset_reset": "latest",
+        "num_partitions": 3,
+        "replication_factor": 3,
+        "enable_idempotence": true,
+        "acks": "all",
+        "retries": 5,
+        "max_in_flight_requests_per_connection": 5
+        },
+    "space_track_config":{
+        "username": "ambrosino.ivan@gmail.com",
+        "password": "/app/password/spacetrack_passwd",
+        "uri_base": "https://www.space-track.org",
+        "request_login": "/ajaxauth/login",
+        "request_cmd_action": "/basicspacedata/query",
+        "request_get_last": "/class/tle_latest/ORDINAL/1/NORAD_CAT_ID",
+        "order": "/orderby/TLE_LINE1",
+        "format": ""
+    },
+    "topic_satellite_name": true,
+    "sleep_time":3600,
+    "interval": 900,
+    "list_satelites":{
+        "file": "list_satellites.config",
+        "separator": ";",
+        "name_collumns": true
+    },
+    "logs": {
+        "folder":"logs",
+        "filename": "spacetrack_tle_publisher.log",
+        "rotation": 5,
+        "size": 5000000,
+        "debug_mode": false
+    }
+}

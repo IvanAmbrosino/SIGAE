@@ -1,8 +1,0 @@
-{
-    "logs": {
-        "folder":"logs",
-        "filename": "post_tle.log",
-        "rotation": 5,
-        "size": 5000000
-        }
-}

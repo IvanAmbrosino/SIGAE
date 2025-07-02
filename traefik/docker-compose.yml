@@ -1,0 +1,36 @@
+version: "3.8" 
+
+services:
+  traefik:
+    image: traefik:v2.2
+    command:
+      - "--api=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--api.insecure=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false" # No expone todos los contenedores por defecto
+      - "--providers.docker.network=reverse-proxy-net"
+      - "--api.dashboard=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--log.level=DEBUG"
+      # Agregado de certificados
+      - "--entrypoints.websecure.http.tls=true"
+      - "--serverstransport.insecureskipverify=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    networks:
+      - reverse-proxy-net
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+networks:
+  reverse-proxy-net:
+    external: true

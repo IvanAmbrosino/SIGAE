@@ -1,0 +1,55 @@
+{
+    "get_tle":{
+        "bootstrap_servers": "kafka-broker-1:9092,kafka-broker-2:9092,kafka-broker-3:9092",
+        "schema_registry_url": "http://schema-registry:8081",
+        "group_id": "tle-consumer-viasat-ant-1",
+        "auto_offset_reset": "earliest",
+        "enable_auto_commit": false,
+        "topic":1,
+        "waiting_time": 30,
+        "max_retries":5
+        },
+    "type":"viasat direct",
+    "check_accept": false,
+    "accept_string":"ACCEPTED",
+    "tmp_archive": "/tle_tmp.txt",
+    "tle_filename": "/rciEphem_post_tle_TEST.txt",
+    "validate_file": "/validate.txt",
+    "server_config":{
+        "server_ip":"10.0.0.253",
+        "server_user":"soporte",
+        "server_password":"/app/password/srv_inbox_passwd",
+        "destination_path":"/home/soporte/tle_destination_ant_1",
+        "waiting_time": 30,
+        "max_retries":3
+    },
+    "server_tunnel":{
+        "server_ip":"",
+        "server_user":"",
+        "server_password":""
+    },
+    "second_server_tunnel":{
+        "server_ip":"",
+        "server_user":"",
+        "server_password":""
+    },
+    "logs": {
+        "folder":"logs",
+        "filename": "viasat_tle_sender.log",
+        "rotation": 5,
+        "size": 5000000,
+        "debug_mode": true
+        },
+    "database": {
+        "host": "10.0.100.24",
+        "port": 1433,
+        "user": "sa",
+        "password": "",
+        "Planificaciones":{
+            "bbdd":"O-DATMNG-DB-S",
+            "tabla": "Satellites",
+            "columnas": ["ID","CONFIG","SAT"]
+        }
+    }
+}
+
