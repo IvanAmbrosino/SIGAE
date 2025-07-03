@@ -1,0 +1,12 @@
+
+services:
+  inbox-tle-publisher:
+    image: inbox-tle-publisher
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: inbox-tle-publisher
+    volumes:
+      - ./logs:/app/logs
+      - ./configs:/app/configs
+      - /home/iambrosino/actualiza_tle/inbox-tle-publisher/test/password:/app/password

@@ -1,0 +1,19 @@
+
+services:
+  saocom-tle-publisher:
+    image: saocom-tle-publisher
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: saocom-tle-publisher-ant7
+    hostname: saocom-tle-publisher-ant7
+    networks:
+      - broker-kafka
+    volumes:
+      - ./logs:/app/logs
+      - ./configs:/app/configs
+      - ./tmp:/app/tmp
+      - /home/iambrosino/actualiza_tle/saocom-tle-publisher/test/password:/app/password
+networks:
+  broker-kafka:
+    external: true

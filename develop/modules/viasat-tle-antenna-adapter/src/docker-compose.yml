@@ -1,0 +1,15 @@
+services:
+  viasat-direct:
+    image: viasat-tle-sender
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: viasat-tle-sender
+    hostname: viasat-tle-sender_direct
+    volumes:
+      - ./logs:/app/logs
+      - ./configs:/app/configs
+      - /home/iambrosino/actualiza_tle/viasat-tle-sender/test/passwd:/app/passwd
+networks:
+  broker-kafka:
+    external: true

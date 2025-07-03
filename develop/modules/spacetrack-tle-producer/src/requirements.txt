@@ -1,0 +1,3 @@
+paramiko
+requests
+confluent-kafka[avro]

@@ -1,0 +1,64 @@
+{
+    "get_tle":{
+        "bootstrap_servers": "kafka-node-1:9092,kafka-node-2:9093,kafka-node-3:9094",
+        "schema_registry_url": "http://localhost:8081",
+        "group_id": "tle-consumer-anty",
+        "auto_offset_reset": "earliest",
+        "enable_auto_commit": false,
+        "topic":1,
+        "waiting_time": 30,
+        "max_retries":5
+        },
+    "type":"viasat direct",
+    "check_accept": false,
+    "accept_string":"ACCEPTED",
+    "tmp_archive": "/tle_tmp.txt",
+    "tle_filename": "/rciEphem_post_tle_TEST.txt",
+    "done": true,
+    "return_filename": "/importEphem_post_tle_TEST.txt",
+    "validate_file": "/validate.txt",
+    "server_config":{
+        "server_ip":"10.0.100.253",
+        "server_user":"soporte",
+        "server_password":"/app/passwd/soporte_password",
+        "destination_path":"/home/soporte/test",
+        "waiting_time": 30,
+        "max_retries":3
+    },
+    "server_tunnel":{
+        "server_ip":"",
+        "server_user":"",
+        "server_password":""
+    },
+    "second_server_tunnel":{
+        "server_ip":"",
+        "server_user":"",
+        "server_password":""
+    },
+    "logs": {
+        "folder":"logs",
+        "filename": "post_tle.log",
+        "rotation": 5,
+        "size": 5000000,
+        "debug_mode": true
+        },
+    "database": {
+        "host": "10.0.100.24",
+        "port": 1433,
+        "user": "sa",
+        "password": "",
+        "Planificaciones":{
+            "bbdd":"O-DATMNG-DB-S",
+            "tabla": "Satellites",
+            "columnas": ["ID","CONFIG","SAT"]
+        }
+    },
+    "mail":{
+        "notifications": true,
+        "mailserver": "200.16.81.74",
+        "from":"email-agent@conae.gov.ar",
+        "to":["cgss.systemsupport@conae.gov.ar"],
+        "attachments": ""
+    }
+}
+

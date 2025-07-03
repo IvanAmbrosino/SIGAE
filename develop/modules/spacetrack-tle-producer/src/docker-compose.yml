@@ -1,0 +1,19 @@
+
+services:
+  spacetrack-tle-publisher:
+    image: space-track-tle-publisher
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: space-track-tle-publisher-ant7
+    hostname: space-track-tle-publisher-ant7
+    networks:
+      - broker-kafka
+    volumes:
+      - ./logs:/app/logs
+      - ./configs:/app/configs
+      - ./tmp:/app/tmp
+      - /home/iambrosino/actualiza_tle/spacetrack-tle-publisher/test/password:/app/password
+networks:
+  broker-kafka:
+    external: true

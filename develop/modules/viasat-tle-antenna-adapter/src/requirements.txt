@@ -1,0 +1,4 @@
+paramiko
+sshtunnel
+pymssql
+confluent-kafka[avro]

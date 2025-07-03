@@ -1,0 +1,4 @@
+test/tle_retrieve_scrips/
+test/password/
+test/
+**/__pycache__/

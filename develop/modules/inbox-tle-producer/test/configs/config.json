@@ -1,0 +1,42 @@
+{
+    "kafka_config":{
+        "bootstrap_servers": "localhost:19092,localhost:29092,localhost:39092",
+        "schema_registry_url": "http://localhost:8081",
+        "schema_file": "tle_schema.json",
+        "group_id": "tle-publisher-group",
+        "client_id": "inbox-tle-publisher",
+        "auto_offset_reset": "latest",
+        "num_partitions": 3,
+        "replication_factor": 3,
+        "enable_idempotence": true,
+        "acks": "all",
+        "retries": 5,
+        "max_in_flight_requests_per_connection": 5,
+        "auto_create_topics": true
+        },
+    "sftp_server":{
+        "host":"10.0.0.253",
+        "user":"soporte",
+        "port": 22,
+        "password":"/app/password/srv_passwd",
+        "directory":"/home/soporte/inbox-tle-test",
+        "file_suffix":".TLE",
+        "file_prefix": "",
+        "time_out": 30
+    },
+    "sleep_time": 10,
+    "logs": {
+        "folder":"logs",
+        "filename": "inbox_tle_publisher.log",
+        "rotation": 5,
+        "size": 5000000,
+        "debug_mode": false
+    },
+    "mail":{
+        "notifications": false,
+        "mailserver": "200.16.81.74",
+        "from":"email-agent@conae.gov.ar",
+        "to":["cgss.systemsupport@conae.gov.ar"],
+        "attachments": ""
+    }
+}

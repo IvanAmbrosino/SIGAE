@@ -1,0 +1,3 @@
+test/tle_retrieve_scrips/
+test/*
+**/__pycache__/
