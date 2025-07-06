@@ -1,0 +1,26 @@
+services:
+  tle-pass-activity-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tle-pass-activity-generator
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./configs:/app/configs
+    networks:
+      - kafka-net
+
+  send-test-tle:
+    build:
+      context: .
+      dockerfile: Dockerfile.send_test_tle
+    container_name: send-test-tle
+    networks:
+      - kafka-net
+    depends_on:
+      - tle-pass-activity-generator
+
+networks:
+  kafka-net:
+    external: true

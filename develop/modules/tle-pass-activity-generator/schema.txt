@@ -1,0 +1,9 @@
+curl -X POST http://localhost:8081/subjects/_TLE-value/versions \
+  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  --data '{
+    "schema": "{\"type\":\"record\",\"name\":\"TLEMessage\",\"fields\":[
+      {\"name\":\"satellite_name\",\"type\":\"string\"},
+      {\"name\":\"line1\",\"type\":\"string\"},
+      {\"name\":\"line2\",\"type\":\"string\"}
+    ]}"
+  }'

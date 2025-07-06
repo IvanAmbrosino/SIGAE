@@ -1,0 +1,12 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./test/insert_test_satellites.py ./
+COPY ./test/send_test_tle.py ./
+COPY ./test/run_all_tests.py ./
+
+CMD ["python", "run_all_tests.py"] 

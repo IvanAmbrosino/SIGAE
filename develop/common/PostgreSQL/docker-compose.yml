@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: SecurePassword123!
     volumes:
       - ./pgdata:/var/lib/postgresql/data
-      - /home/iambrosino/SIGAE/PostgreSQL/deepseek_sql_.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./deepseek_sql_.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     healthcheck:
@@ -18,3 +18,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    ## lo puse en la misma red que el kafka para poder acceder desde el consumer
+    networks:
+      - kafka-net
+
+networks:
+  kafka-net:
+    external: true
