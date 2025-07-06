@@ -1,0 +1,16 @@
+{"Antenna_Schedule": {
+    "bbdd": {
+        "host": "10.0.3.15",
+        "user": "sa",
+        "passwd": ""
+        },
+        "Plan": {
+            "db": "L-HPI-DB-S",
+            "table": ["Planificaciones","configuraciones", "antena","Satelites"]
+        },
+        "TLEs": {
+            "db": "O-DATMNG-DB-S",
+            "table": ["TLEs","Satelites"]
+        }
+    }
+}

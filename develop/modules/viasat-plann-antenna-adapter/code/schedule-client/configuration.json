@@ -1,0 +1,26 @@
+{"VFI":{
+    "local":{
+        "workdir":"workdir",
+        "logs":{
+            "dir":"logs",
+            "rotation":5,
+            "size":5000000
+        }
+    },
+    "api":{
+        "unit": "ANTENA 13",
+        "url": "http://10.0.100.24:9000/API_Schedule/"
+        },
+    "destination":{
+        "host":"10.0.5.115",
+        "user":"scc",
+        "pswd":"scc.fun",
+        "path":"/home/scc/etc/remote/archive/"
+        },
+    "cache":{
+        "host": "10.0.100.24",
+        "port": 6380,
+        "ttl_hours": 48
+        }
+    }
+}

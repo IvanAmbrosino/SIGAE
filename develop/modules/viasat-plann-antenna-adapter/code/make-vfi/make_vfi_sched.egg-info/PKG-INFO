@@ -1,0 +1,52 @@
+Metadata-Version: 2.1
+Name: make-vfi-sched
+Version: 1.2.2
+Summary: Library for generete VFI Schedule
+Home-page: http://10.0.100.183/cgss/engineering/make-vfi.git
+Author: Emiliano A. Baum
+Author-email: ebaum@conae.gov.ar
+License: MIT
+Description-Content-Type: text/markdown
+
+# Crea el archivo VFI 
+
+Recibe como parametros los datos de planificacion y devuelve un archivo de planificacion para el formato VFI segun el documento https://cgss-managment-tools.et.conae.gov.ar/dmsf/files/1444/view
+
+Las activities esta en el formato de la API que opbtiene datos de la BBDD de planificacion.
+
+## Consultar estado en la antena.
+
+* Se puede consultar el estado del Schedule de la antena?
+* Si no se puede consultar, usar redis para tener local lo enviado cuando tengo confirmacion del envio del rciSched?
+* Buscar por scp/ftp el importSched.done?
+
+
+## Formato de datos. se puede usar para test
+
+Datos:
+
+unit =  "ANTVSTF01"
+activities = {0: {'Satelite': 'LANDSAT-8', 'Orbita': '58985', 'FechaHoraInicial': '2024-03-16T01:54:09',
+                 'FechaHoraFinal': '2024-03-16T02:07:12', 'idMacro': 1725, 'Estado': 'A'}, 
+             1: {'Satelite': 'SAOCOM-1A', 'Orbita': '29422', 'FechaHoraInicial': '2024-03-16T09:01:58.700000',
+                 'FechaHoraFinal': '2024-03-16T09:10:34.700000', 'idMacro': 1727, 'Estado': 'A'}, 
+             2: {'Satelite': 'SAOCOM-1B', 'Orbita': '19160', 'FechaHoraInicial': '2024-03-16T09:44:41.800000',
+                 'FechaHoraFinal': '2024-03-16T09:57:05.800000', 'idMacro': 1730, 'Estado': 'A'}, 
+             3: {'Satelite': 'SAOCOM-1A', 'Orbita': '29423', 'FechaHoraInicial': '2024-03-16T10:36:14.500000',
+                 'FechaHoraFinal': '2024-03-16T10:49:20.500000', 'idMacro': 1727, 'Estado': 'A'}}
+filename = "test.xml"
+path = "."
+
+> if __name__ == "__main__":
+>    make_vfi_sched(activities, unit, filename, path)
+
+## Como instalarlo localmente
+
+Empaqueto la libreria:
+
+> python3 setup.py sdist bdist_wheel
+
+
+Instalo la libreria
+
+> python3 -m pip install dist/make-vfi-sched-1.2.0.tar.gz

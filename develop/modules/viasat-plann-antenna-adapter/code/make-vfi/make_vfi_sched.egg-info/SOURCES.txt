@@ -1,0 +1,8 @@
+README.md
+setup.py
+make_vfi/__init__.py
+make_vfi/xml_ops.py
+make_vfi_sched.egg-info/PKG-INFO
+make_vfi_sched.egg-info/SOURCES.txt
+make_vfi_sched.egg-info/dependency_links.txt
+make_vfi_sched.egg-info/top_level.txt

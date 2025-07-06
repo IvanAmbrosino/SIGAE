@@ -1,0 +1,11 @@
+{"VFI":{
+    "local":{
+        "workdir":"workdir",
+        "logs":{
+            "dir":"logs",
+            "rotation":5,
+            "size":5000000
+            }
+        }
+    }
+}
