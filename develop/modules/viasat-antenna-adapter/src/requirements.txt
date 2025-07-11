@@ -1,0 +1,6 @@
+paramiko
+sshtunnel
+pymssql
+confluent-kafka[avro]
+lxml
+sqlite3
