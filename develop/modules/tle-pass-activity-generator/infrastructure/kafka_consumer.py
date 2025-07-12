@@ -44,27 +44,40 @@ def consume_tle_messages():
     try:
         with get_db_connection(db_config) as conn:
             while True:
-                msg = consumer.poll(1.0)
-                if msg is None:
-                    continue
-                value = msg.value()
-                if value is not None:
+                try:
+                    msg = consumer.poll(1.0)
+                    if msg is None:
+                        continue
+
+                    value = msg.value()
+                    if value is None:
+                        print("Mensaje recibido pero vacío o no deserializable.")
+                        continue
+
                     print(f"Recibido TLE: {value}")
                     tle_name = value.get('satellite_name')
                     tle_line1 = value.get('line1')
                     tle_line2 = value.get('line2')
-                    # Rango de tiempo: próximas 24 horas
+
                     start_time = datetime.now(timezone.utc)
                     end_time = start_time + timedelta(hours=24)
+
                     pasadas = calcular_pasadas(tle_name, tle_line1, tle_line2, start_time, end_time)
 
-                    # Guardar en BD
                     save_pass_activities(conn, pasadas)
 
                     for pasada in pasadas:
-                        print(f"Pasada calculada y guardada: {pasada}")
+                        print(
+                            f"Pasada calculada y guardada: Satélite {pasada.satellite_id} "
+                            f"(órbita {pasada.orbit_number}) - Inicio: {pasada.start_time}, "
+                            f"Máx. elevación: {pasada.max_elevation_time}, Fin: {pasada.end_time}, "
+                            f"Duración: {pasada.duration}s, Prioridad: {pasada.priority.value}, Estado: {pasada.status.value}"
+                        )
+
+                except Exception as e:
+                    print(f"[ERROR] Procesando mensaje: {e}")
     except KeyboardInterrupt:
-        pass
+        print("Interrupción manual detectada. Cerrando consumidor...")
     finally:
         consumer.close()
 

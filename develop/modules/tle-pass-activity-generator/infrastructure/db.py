@@ -18,30 +18,26 @@ def get_db_connection(config):
     finally:
         conn.close()
 
-def get_satellite_id_by_name(conn, name):
-    with conn.cursor() as cur:
-        cur.execute("SELECT id FROM satellites WHERE name = %s", (name,))
-        row = cur.fetchone()
-        if row:
-            return row[0]
-        else:
-            raise ValueError(f"Satellite with name '{name}' not found in DB")
-
-
 def save_pass_activities(conn, pasadas):
     sql = """
     INSERT INTO activities
     (id, satellite_id, orbit_number, start_time, max_elevation_time, end_time, duration, status, priority, created_at, updated_at)
     VALUES %s
+    ON CONFLICT (satellite_id, orbit_number)
+    DO UPDATE SET
+        start_time = EXCLUDED.start_time,
+        max_elevation_time = EXCLUDED.max_elevation_time,
+        end_time = EXCLUDED.end_time,
+        duration = EXCLUDED.duration,
+        status = EXCLUDED.status,
+        priority = EXCLUDED.priority,
+        updated_at = EXCLUDED.updated_at
     """
     values = []
     for pasada in pasadas:
-        # Obtener ID real desde el nombre
-        satellite_uuid = get_satellite_id_by_name(conn, pasada.satellite_id)
-
         values.append((
             str(uuid.uuid4()),
-            satellite_uuid,
+            pasada.satellite_id,  # ← ahora es el norad_id
             pasada.orbit_number,
             pasada.start_time,
             pasada.max_elevation_time,
@@ -53,7 +49,5 @@ def save_pass_activities(conn, pasadas):
             datetime.now()
         ))
     with conn.cursor() as cur:
-        print("N columnas por fila:", len(values[0]))
-        print("Primer fila:", values[0])
         execute_values(cur, sql, values, template=None, page_size=100)
     conn.commit()

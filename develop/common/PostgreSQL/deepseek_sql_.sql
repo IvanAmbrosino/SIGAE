@@ -77,9 +77,8 @@ CREATE TABLE antenna_capabilities (
 
 -- Tabla de satélites
 CREATE TABLE satellites (
-    id VARCHAR(36) PRIMARY KEY,
+    id VARCHAR(20) PRIMARY KEY,  -- NORAD ID suele ser un número no muy largo, ajustar tamaño si querés
     name VARCHAR(255) NOT NULL,
-    norad_id VARCHAR(255) UNIQUE,
     priority_level VARCHAR(10) CHECK (priority_level IN ('critical', 'high', 'medium', 'low')),
     description TEXT,
     is_active BOOLEAN DEFAULT TRUE,
@@ -130,7 +129,8 @@ CREATE TABLE activities (
     status VARCHAR(20) CHECK (status IN ('new', 'assigned', 'unassigned', 'pending', 'authorized', 'planned', 'modified', 'updated', 'critical')),
     priority VARCHAR(10) CHECK (priority IN ('critical', 'high', 'medium', 'low')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (satellite_id, orbit_number)
 );
 
 -- Tabla de asignaciones de actividad

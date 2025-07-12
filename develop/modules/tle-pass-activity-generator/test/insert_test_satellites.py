@@ -1,12 +1,11 @@
 import psycopg2
-import uuid
 from datetime import datetime
 
 db_config = {
     'dbname': 'planificacion_satelital',
     'user': 'planificador_app',
     'password': 'SecurePassword123!',
-    'host': 'satplan_db',  # nombre del contenedor Docker del servicio postgres
+    'host': 'satplan_db',
     'port': 5432
 }
 
@@ -37,13 +36,12 @@ def insert_satellites():
         with conn.cursor() as cur:
             for sat in SATELLITES:
                 cur.execute("""
-                    INSERT INTO satellites (id, name, norad_id, priority_level, description, is_active, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (norad_id) DO NOTHING
+                    INSERT INTO satellites (id, name, priority_level, description, is_active, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO NOTHING
                 """, (
-                    str(uuid.uuid4()),
+                    sat['norad_id'],       # Usamos NORAD ID como PK (id)
                     sat['name'],
-                    sat['norad_id'],
                     sat['priority_level'],
                     sat['description'],
                     True,
