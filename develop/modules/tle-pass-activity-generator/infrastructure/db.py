@@ -4,6 +4,9 @@ from contextlib import contextmanager
 from datetime import datetime
 import uuid 
 
+from domain.tle_pass import TleData
+
+
 @contextmanager
 def get_db_connection(config):
     conn = psycopg2.connect(
@@ -51,3 +54,27 @@ def save_pass_activities(conn, pasadas):
     with conn.cursor() as cur:
         execute_values(cur, sql, values, template=None, page_size=100)
     conn.commit()
+
+
+def save_tle_data(conn, tle: TleData):
+    with conn.cursor() as cur:
+        query = """
+        INSERT INTO tle_data (id, satellite_id, line1, line2, epoch, source, is_valid, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (id) DO NOTHING;
+        """
+        cur.execute(query, (
+            tle.id,
+            tle.satellite_id,
+            tle.line1,
+            tle.line2,
+            tle.epoch,
+            tle.source,
+            tle.is_valid,
+            tle.created_at,
+        ))
+        conn.commit()
+        if cur.rowcount == 1:
+            print(f"[INFO] TLE guardado: {tle.satellite_id} - {tle.epoch}")
+        else:
+            print(f"[INFO] TLE duplicado no insertado: {tle.satellite_id} - {tle.epoch}")

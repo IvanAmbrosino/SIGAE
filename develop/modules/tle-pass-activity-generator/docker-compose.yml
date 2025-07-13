@@ -1,4 +1,14 @@
 services:
+  send-test-tle:
+    build:
+      context: .
+      dockerfile: Dockerfile.send_test_tle
+    container_name: send-test-tle
+    volumes:
+      - ./configs:/app/configs
+    networks:
+      - kafka-net
+
   tle-pass-activity-generator:
     build:
       context: .
@@ -10,16 +20,9 @@ services:
       - ./configs:/app/configs
     networks:
       - kafka-net
-
-  send-test-tle:
-    build:
-      context: .
-      dockerfile: Dockerfile.send_test_tle
-    container_name: send-test-tle
-    networks:
-      - kafka-net
     depends_on:
-      - tle-pass-activity-generator
+      - send-test-tle
+
 
 networks:
   kafka-net:

@@ -19,7 +19,7 @@ def get_norad_id(line1: str) -> str:
 
 
 
-def calcular_pasadas(tle_name, tle_line1, tle_line2, start_time, end_time):
+def compute_passes(tle_name, tle_line1, tle_line2, start_time, end_time):
     ts = load.timescale()
     satellite = EarthSatellite(tle_line1, tle_line2, tle_name, ts)
     station = wgs84.latlon(STATION_LAT, STATION_LON, STATION_ELEV)
@@ -37,7 +37,7 @@ def calcular_pasadas(tle_name, tle_line1, tle_line2, start_time, end_time):
             duration = int((los - aos).total_seconds())
 
             # Calcular el número de órbita
-            orbit_number = calcular_orbit_number(satellite, aos)
+            orbit_number = compute_orbit_number(satellite, aos)
             print(f"Calculando órbita {orbit_number} para {tle_name} en AOS: {aos}, Max Elevación: {max_elev}, LOS: {los}")
 
             pasada = PassActivity(
@@ -51,7 +51,7 @@ def calcular_pasadas(tle_name, tle_line1, tle_line2, start_time, end_time):
             pasadas.append(pasada)
     return pasadas
 
-def calcular_orbit_number(satellite, time_dt):
+def compute_orbit_number(satellite, time_dt):
     epoch = satellite.epoch.utc_datetime()
     mean_motion = satellite.model.no_kozai * 1440 / (2 * 3.141592653589793)
     delta_days = (time_dt - epoch).total_seconds() / 86400  # días fraccionales

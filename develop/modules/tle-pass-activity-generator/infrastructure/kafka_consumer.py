@@ -4,7 +4,9 @@ from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 from confluent_kafka.serialization import StringDeserializer
 from confluent_kafka import DeserializingConsumer
-from application.pass_activity_service import calcular_pasadas
+from application.pass_activity_service import compute_passes
+from application.tle_service import process_and_save_tle
+
 from datetime import datetime, timedelta, timezone
 from infrastructure.db import get_db_connection, save_pass_activities
 
@@ -53,6 +55,8 @@ def consume_tle_messages():
                     if value is None:
                         print("Mensaje recibido pero vacío o no deserializable.")
                         continue
+                    
+                    process_and_save_tle(conn, value)
 
                     print(f"Recibido TLE: {value}")
                     tle_name = value.get('satellite_name')
@@ -62,7 +66,7 @@ def consume_tle_messages():
                     start_time = datetime.now(timezone.utc)
                     end_time = start_time + timedelta(hours=24)
 
-                    pasadas = calcular_pasadas(tle_name, tle_line1, tle_line2, start_time, end_time)
+                    pasadas = compute_passes(tle_name, tle_line1, tle_line2, start_time, end_time)
 
                     save_pass_activities(conn, pasadas)
 
