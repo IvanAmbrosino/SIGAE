@@ -3,26 +3,29 @@ import os
 import logging
 import logging.handlers
 
-from .infraestructure import kafka_adapter, config_manager
-from .application import message_manager
-
+from infraestructure.sqlite_manager import SQLiteManager # pylint: disable=import-error
+from infraestructure.config_manager import ConfigManager # pylint: disable=import-error
+from infraestructure.kafka_adapter import KafkaConnector # pylint: disable=import-error
+from application.message_manager import MessageManager # pylint: disable=import-error
 
 logger = logging.getLogger("Main")
 
 class AntenaAdapter:
     """Main class for the Viasat Antenna Adapter."""
     def __init__(self):
-        self.config_manager = config_manager.ConfigManager()
-        self.config = 
+        self.config_manager = ConfigManager()
+        self.config = self.config_manager.load_config()              # Se cargan las configuracioens
 
         self.script_dir = os.path.dirname(os.path.abspath(__file__)) # Directory of the script
-        self.logs_config = config['logs']                            # Logging configuration
-        kafka_config = config['kafka_conn']                          # Kafka connection configuration
+        self.logs_config = self.config['logs']                       # Logging configuration
+        kafka_config = self.config['kafka_conn']                     # Kafka connection configuration
         self.load_logger()                                           # Carga la configuracion de los logs
 
-        self.kafka_adapter = kafka_adapter.KafkaConnector(kafka_config, logger)
-        self.process_message = message_manager.MessageManager(logger)
+        self.kafka_adapter = KafkaConnector(kafka_config, logger)
+        self.process_message = MessageManager(logger)
 
+        # Inicializacion del modulo
+        SQLiteManager().inicializar() # Inicianlizacion de la base de datos (en caso que no exista)
 
         for message, message_value in self.kafka_adapter.get_message():
             self.process_message.process_message(message_value)

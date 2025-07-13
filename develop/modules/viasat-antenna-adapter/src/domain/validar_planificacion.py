@@ -1,40 +1,38 @@
 """Module that validates the different types of messages"""
 import os
+import re
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 
-#from ..infraestructure import sqlite_manager
+from infraestructure.sqlite_manager import SQLiteManager # pylint: disable=import-error
 
 class Validator(ABC):
     """Abstract class to define the validation strategy"""
 
     @abstractmethod
-    def get_file(self, remote_path: str, local_path: str) -> bool:
+    def validate(self, menssage: dict) -> bool:
         """Obtiene un archivo al servidor SFTP"""
-
-    @abstractmethod
-    def send_files(self, paths_to_file: list[str], destination_paths: list[str]) -> bool:
-        """Envia un archivo al servidor SFTP"""
 
 class ValidateTLE(Validator):
     """Class to validate TLE messages"""
     def __init__(self, logger: logging):
         self.logger = logger
+        self.sqlite_manager = SQLiteManager()
 
-    def validate_tle(self, msg: dict):
+    def validate(self, menssage: dict) -> bool:
         """Valida un mensaje TLE."""
-        get_satellites_planificados = self.get_satellites_planificados()
-        if msg["norad_id"] in get_satellites_planificados:
-            return True
-        else:
-            return False
+        if menssage["norad_id"] in self.get_satellites_planificados():
+            if self.validate_tle_format(menssage['tle']):
+                return True
+        return False
 
     def get_satellites_planificados(self):
-        """Obtiene los satélites planificados desde el archivo PlanningDB."""
-        # Implementar la lógica para obtener los satélites planificados
-        # Consulta al cache por la planificacion
-        return ["25544", "46265"]
+        """
+        Obtiene los satélites planificados desde el archivo PlanningDB
+        Consulta al cache por la planificacion y devuelve una lista de norad_id
+        """
+        return self.sqlite_manager.get_satellites_planificados()
 
     def validate_tle_checksum(self, tle_line) -> bool:
         """
@@ -58,9 +56,9 @@ class ValidateTLE(Validator):
 
     def validate_tle_format(self, tle : dict) -> bool:
         """Verifica el formato del TLE y el CRC"""
-        satellite_name = self.satellite_config["satellite_altername"] if self.satellite_config["satellite_altername"] else self.satellite_config["satellite_name"]
+        #satellite_name = self.satellite_config["satellite_altername"] if self.satellite_config["satellite_altername"] else self.satellite_config["satellite_name"]
         try:
-            if tle['satellite_name'] == satellite_name and len(tle['line1']) == 69 and len(tle['line2']) == 69:
+            if len(tle['line1']) == 69 and len(tle['line2']) == 69:
                 if self.validate_tle_checksum(tle['line1']) and self.validate_tle_checksum(tle['line2']):
                     return True
         except KeyError as e:
@@ -79,31 +77,20 @@ class ValidateTLE(Validator):
             day_frac = day_of_year - day_int
             return datetime(year, 1, 1) + timedelta(days=day_int - 1, seconds=day_frac * 86400)
 
-    def is_latest_tle(self, tle : dict, tle_type : str) -> bool:
+    def is_latest_tle(self, tle : dict) -> bool:
         """Verifica que el TLE sea el ultimo"""
-        file_tle_bkp = os.path.join(self.tmp_dir, f"{tle_type}_bkp.txt")
-        if not os.path.exists(file_tle_bkp):
-            with open(file_tle_bkp, "w", encoding='utf-8') as f:
-                f.write("") # Creamos el archivo vacio
-            self.logger.info("El archivo de backup no existe, se crea uno nuevo")
+        last_tle_in_db = self.sqlite_manager.get_last_tle()
 
-        with open(file_tle_bkp, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-        if len(lines) >= 3:
-            if (lines[1].strip() != tle['line1'] or lines[2].strip() != tle['line2']):
-                self.logger.debug("El TLE es diferente al anterior. Lineas: %s TLE nuevo: %s", lines, tle)
-                old_tle_date = self.tle_epoch_to_datetime(lines[1].strip().split()[3])
-                new_tle_date = self.tle_epoch_to_datetime(tle['line1'].split()[3])
-                if new_tle_date > old_tle_date:
-                    self.logger.debug("Comparacion de Epoch Validado = OK")
-                    return True
-                #self.send_mail(tle,"Comparacion con epoch Erronea")
-                self.logger.debug("Comparacion de Epoch Validado = Err -> TLE con epoch menor al anterior")
-
-        elif len(lines) == 0:
-            self.logger.info("Es el primer TLE")
-            return True
-
+        if (last_tle_in_db[1].strip() != tle['line1'] or last_tle_in_db[2].strip() != tle['line2']):
+            self.logger.debug("El TLE es diferente al anterior. Lineas: %s TLE nuevo: %s", last_tle_in_db, tle)
+            old_tle_date = self.tle_epoch_to_datetime(last_tle_in_db[1].strip().split()[3])
+            new_tle_date = self.tle_epoch_to_datetime(tle['line1'].split()[3])
+            if new_tle_date > old_tle_date:
+                self.logger.debug("Comparacion de Epoch Validado = OK")
+                self.sqlite_manager.upsert_tle(tle=tle)
+                return True
+            self.logger.debug("Comparacion de Epoch Validado = Err -> TLE con epoch menor al anterior")
+        self.logger.debug("TLE ya recibido, rechazando....")
         return False
 
 class ValidarPlann():
@@ -132,7 +119,7 @@ class ValidarPlann():
         start_dt = datetime.strptime(start_str, "%Y %j %H:%M:%S")
         return start_dt > datetime.utcnow() + timedelta(minutes=5)
 
-    def has_conflict(self, start, end, antenna_id):
+    def has_conflict(self):
         """Verifica si hay conflictos de actividades en la ventana de tiempo especificada."""
         actividades = self.get_actividades_en_ventana()
         return len(actividades) > 0
