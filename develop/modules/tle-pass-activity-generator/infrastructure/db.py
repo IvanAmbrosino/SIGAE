@@ -3,8 +3,9 @@ from psycopg2.extras import execute_values
 from contextlib import contextmanager
 from datetime import datetime
 import uuid 
+from typing import List
 
-from domain.tle_pass import TleData
+from domain.tle_pass import TleData, PassActivity
 
 
 @contextmanager
@@ -21,7 +22,7 @@ def get_db_connection(config):
     finally:
         conn.close()
 
-def save_pass_activities(conn, pasadas):
+def save_pass_activities(conn, pasadas: List[PassActivity]):
     sql = """
     INSERT INTO activities
     (id, satellite_id, orbit_number, start_time, max_elevation_time, end_time, duration, status, priority, created_at, updated_at)
@@ -74,7 +75,3 @@ def save_tle_data(conn, tle: TleData):
             tle.created_at,
         ))
         conn.commit()
-        if cur.rowcount == 1:
-            print(f"[INFO] TLE guardado: {tle.satellite_id} - {tle.epoch}")
-        else:
-            print(f"[INFO] TLE duplicado no insertado: {tle.satellite_id} - {tle.epoch}")

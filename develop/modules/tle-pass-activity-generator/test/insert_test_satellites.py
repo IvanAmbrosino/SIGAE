@@ -1,13 +1,10 @@
 import psycopg2
 from datetime import datetime
+import yaml
 
-db_config = {
-    'dbname': 'planificacion_satelital',
-    'user': 'planificador_app',
-    'password': 'SecurePassword123!',
-    'host': 'satplan_db',
-    'port': 5432
-}
+def load_config():
+    with open('configs/config.yaml', 'r') as f:
+        return yaml.safe_load(f)
 
 SATELLITES = [
     {
@@ -31,6 +28,8 @@ SATELLITES = [
 ]
 
 def insert_satellites():
+    config = load_config()
+    db_config = config['database']
     try:
         conn = psycopg2.connect(**db_config)
         with conn.cursor() as cur:

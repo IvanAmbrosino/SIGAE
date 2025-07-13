@@ -18,6 +18,7 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - ./configs:/app/configs
+      - ./logs:/app/logs
     networks:
       - kafka-net
     depends_on:

@@ -1,1 +1,0 @@
-from .pass_activity_service import compute_passes

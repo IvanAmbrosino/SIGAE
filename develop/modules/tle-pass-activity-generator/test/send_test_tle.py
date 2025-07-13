@@ -5,7 +5,7 @@ from confluent_kafka import SerializingProducer
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer
 from confluent_kafka.serialization import StringSerializer
-
+from datetime import datetime
 
 def load_config():
     with open('configs/config.yaml', 'r') as f:
@@ -42,7 +42,7 @@ tle_messages = [
         "satellite_name": "ISS",
         "line1": "1 25544U 98067A   24185.18437500  .00016717  00000+0  10270-3 0  9000",
         "line2": "2 25544  51.6448  18.5343 0001567  74.9494 285.1856 15.50773339  1782",
-        "timestamp": int(time.time() * 1000)
+        "timestamp": int(datetime.utcnow().timestamp() * 1000)
     },
     {
         "message_type": "TLE",
@@ -50,7 +50,7 @@ tle_messages = [
         "satellite_name": "AQUA",
         "line1": "1 27424U 02022A   24185.20833333  .00000058  00000+0  24842-4 0  9991",
         "line2": "2 27424  98.2002 209.5112 0001090  91.2677 268.8644 14.57109462226089",
-        "timestamp": int(time.time() * 1000)
+        "timestamp": int(datetime.utcnow().timestamp() * 1000)
     },
     {
         "message_type": "TLE",
@@ -58,7 +58,7 @@ tle_messages = [
         "satellite_name": "LANDSAT-8",
         "line1": "1 39084U 15001A   24185.20200000  .00000100  00000+0  12345-4 0  9999",
         "line2": "2 39084  98.2100 210.0000 0001200  85.9000 275.0000 14.57120000000000  1234",
-        "timestamp": int(time.time() * 1000)
+        "timestamp": int(datetime.utcnow().timestamp() * 1000)
     },
     {
         "message_type": "TLE",
@@ -66,7 +66,7 @@ tle_messages = [
         "satellite_name": "ISS",
         "line1": "1 25544U 98067A   24185.19000000  .00017000  00000+0  10280-3 0  9001",
         "line2": "2 25544  51.6450  18.5300 0001570  75.0000 285.0000 15.50800000  1783",
-        "timestamp": int(time.time() * 1000)
+        "timestamp": int(datetime.utcnow().timestamp() * 1000)
     },
     {
         "message_type": "TLE",
@@ -74,7 +74,7 @@ tle_messages = [
         "satellite_name": "AQUA",
         "line1": "1 27424U 02022A   24185.21000000  .00000060  00000+0  24850-4 0  9992",
         "line2": "2 27424  98.2010 209.5100 0001100  91.2700 268.8600 14.57110000  9992",
-        "timestamp": int(time.time() * 1000)
+        "timestamp": int(datetime.utcnow().timestamp() * 1000)
     }
 ]
 def main():

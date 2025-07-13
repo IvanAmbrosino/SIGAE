@@ -10,4 +10,4 @@ COPY . .
 
 ENV PYTHONPATH=/app
 
-CMD ["python", "infrastructure/kafka_consumer.py"]
+CMD ["python", "./main.py"]

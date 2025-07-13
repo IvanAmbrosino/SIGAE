@@ -5,6 +5,7 @@ import re
 from datetime import datetime, timedelta
 
 
+
 def get_norad_id(line1: str) -> str:
     match = re.match(r"1\s+(\d{5})U", line1)
     if match:
@@ -13,7 +14,7 @@ def get_norad_id(line1: str) -> str:
 
 
 
-def process_and_save_tle(conn, tle_message: dict):
+def process_and_save_tle(conn, tle_message: dict) -> TleData:
     line1 = tle_message.get('line1')
     line2 = tle_message.get('line2')
     satellite_id = get_norad_id(line1)  
@@ -29,6 +30,7 @@ def process_and_save_tle(conn, tle_message: dict):
         is_valid=True,
     )
     save_tle_data(conn, tle_data)
+    return tle_data
 
 
 def parse_epoch_from_line1(line1: str) -> datetime:

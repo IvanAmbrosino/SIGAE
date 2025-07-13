@@ -1,8 +1,9 @@
 from skyfield.api import EarthSatellite, load, wgs84
-from datetime import datetime, timedelta
-from domain.tle_pass import PassActivity
 from math import floor
+from domain.tle_pass import TleData, PassActivity
 import re
+from typing import List
+
 
 # Ejemplo de ubicación de estación
 STATION_LAT = -34.6  # Buenos Aires
@@ -18,30 +19,26 @@ def get_norad_id(line1: str) -> str:
     raise ValueError("Formato de TLE inválido")
 
 
-
-def compute_passes(tle_name, tle_line1, tle_line2, start_time, end_time):
+def compute_passes(tle: TleData, start_time, end_time) -> List[PassActivity]:
     ts = load.timescale()
-    satellite = EarthSatellite(tle_line1, tle_line2, tle_name, ts)
+    satellite = EarthSatellite(tle.line1, tle.line2, tle.satellite_id, ts)
     station = wgs84.latlon(STATION_LAT, STATION_LON, STATION_ELEV)
     t0 = ts.utc(start_time)
     t1 = ts.utc(end_time)
-    # Cada 30 segundos
+
     times, events = satellite.find_events(station, t0, t1, altitude_degrees=10.0)
-    norad_id = get_norad_id(tle_line1)
     pasadas = []
+
     for i in range(0, len(events), 3):
-        if i+2 < len(events):
+        if i + 2 < len(events):
             aos = times[i].utc_datetime()
-            max_elev = times[i+1].utc_datetime()
-            los = times[i+2].utc_datetime()
+            max_elev = times[i + 1].utc_datetime()
+            los = times[i + 2].utc_datetime()
             duration = int((los - aos).total_seconds())
 
-            # Calcular el número de órbita
             orbit_number = compute_orbit_number(satellite, aos)
-            print(f"Calculando órbita {orbit_number} para {tle_name} en AOS: {aos}, Max Elevación: {max_elev}, LOS: {los}")
-
             pasada = PassActivity(
-                satellite_id=norad_id,
+                satellite_id=tle.satellite_id,
                 orbit_number=orbit_number,
                 start_time=aos,
                 max_elevation_time=max_elev,
@@ -49,7 +46,9 @@ def compute_passes(tle_name, tle_line1, tle_line2, start_time, end_time):
                 duration=duration
             )
             pasadas.append(pasada)
+
     return pasadas
+
 
 def compute_orbit_number(satellite, time_dt):
     epoch = satellite.epoch.utc_datetime()
