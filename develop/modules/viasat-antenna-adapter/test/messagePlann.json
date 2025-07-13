@@ -1,0 +1,25 @@
+
+{
+    "type": "plan",
+    "antenna_id": "ANTENA_6",
+    "timestamp": "2025-07-11T14:00:00Z",
+    "source": "planificador_automatico",
+    "plan": [
+        {
+        "task_id": "SAOCOM1B_ANTENA_6_2025_193_130000",
+        "satellite": "SAOCOM-1B",
+        "action": "append",
+        "norad_id": "46265",
+        "config_id": 10,
+        "time_window": {
+            "start": "2025-07-11T14:00:00Z",
+            "end": "2025-07-11T14:15:00Z"
+            },
+        "prepass_seconds": 120,
+        "postpass_seconds": 60,
+        "metadata": {
+            "priority": "urgent"
+            }
+        }
+    ]
+}

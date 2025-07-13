@@ -1,0 +1,5 @@
+app:
+  antenna_id: "ANTENA_DEFAULT"
+  broadcast_tle: false
+  tle_cache_days: 3
+  log_level: "INFO"
