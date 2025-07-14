@@ -1,21 +1,48 @@
-"""Modulo que procesa mensajes entrantes de Kafka."""
+"""Module that make file the different types of messages"""
 import logging
+from time import sleep
+
+from infraestructure.config_manager import ConfigManager # pylint: disable=import-error
+from domain.validar_planificacion import ValidatePlann # pylint: disable=import-error
+from domain.validar_planificacion import ValidateTLE # pylint: disable=import-error
+from domain.make_file import MakeTLEFile # pylint: disable=import-error
+from infraestructure.antenna_connections import SFTPTunnel # pylint: disable=import-error
+from infraestructure.antenna_connections import SFTPDirect # pylint: disable=import-error
+from infraestructure.antenna_connections import SFTPDobleTunnel # pylint: disable=import-error
+
 
 class MessageManager:
     """Clase para procesar mensajes entrantes de Kafka."""
     def __init__(self,logger: logging):
         self.logger = logger
+        self.config = ConfigManager().load_config()
+
+        if self.config["connection_method"] == "direct":
+            self.sender = SFTPDirect()
+        elif self.config["connection_method"] == "tunnel":
+            self.sender = SFTPTunnel()
+        elif self.config["connection_method"] == "double_tunnel":
+            self.sender = SFTPDobleTunnel()
+        else:
+            self.logger.error("No se especificó ningun metodo de conexion: %s",self.config["connection_method"])
+
+    def send_tle_file(self):
+        """Envia el archivo tmp creado a la antena"""
+        local_archives =    ['/app/tmp/tmp_file_tle.txt',   '/app/tmp/tmp_file_tle.txt.done']
+        remote_archives =   [self.config['filename'],       f"{self.config['filename']}.done"]
+        if self.sender.send_files(local_archives, remote_archives):
+            sleep(self.config['sleep_time'])
+            if self.sender.get_file()
 
     def process_message(self, msg: dict, ):
         """Procesa los mensajes recibidos de Kafka y determina su tipo para poder ser procesado."""
-        if msg["type"] == "tle":
-            #if validar_tle(msg):
+        if msg["type"] == "TLE":
+            if ValidateTLE().validate(msg):
                 # Validar si es para la antena - En caso contrario corta el proceso
                 # Validar el CRC, epoch contra fecha actual, etc.
                 # Validar si es mas nuevo que el ultimo TLE - Comparar en la BD (en caso contrario no lo procesa)
-            #make_tle_file(msg)
-            #send_tle_file(msg)
-            pass
+                MakeTLEFile().make_file_to_send(msg)
+                self.send_tle_file()
         elif msg["type"] == "plan":
             #validar_plan(msg)
                 # Validar si es para la antena - En caso contrario corta el proceso

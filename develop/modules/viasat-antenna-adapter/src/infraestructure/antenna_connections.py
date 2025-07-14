@@ -188,7 +188,7 @@ class SFTPTunnel(Connection):
             self.close_connections()
         return sended
 
-class SSHDobleTunnel(Connection):
+class SFTPDobleTunnel(Connection):
     """Clase que implementa la estrategia de conexión SSH a través de dos túneles"""
     def __init__(self, jump1_host, jump1_user, jump1_pass,
                  jump2_host, jump2_user, jump2_pass,

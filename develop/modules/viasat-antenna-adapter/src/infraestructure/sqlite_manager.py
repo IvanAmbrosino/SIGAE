@@ -94,7 +94,7 @@ class SQLiteManager:
     # CONSULTAS
     # -----------------------------------------------
 
-    def get_tle(self, norad_id, freshness_hours=48):
+    def get_freshness_tle(self, norad_id, freshness_hours=48):
         """Obtains the TLE for a given NORAD ID, checking freshness."""
         conn = sqlite3.connect(TLE_DB)
         c = conn.cursor()
@@ -107,9 +107,21 @@ class SQLiteManager:
         conn.close()
         if row:
             return {"line1": row[0], "line2": row[1]}
-        else:
-            print(f"No TLE found for NORAD ID {norad_id} or it is too old.")
+        print(f"No TLE found for NORAD ID {norad_id} or it is too old.")
         return None
+
+    def get_last_tle(self, norad_id):
+        """Obtains last TLE order by timestamp."""
+        conn = sqlite3.connect(TLE_DB)
+        c = conn.cursor()
+        c.execute("""
+            SELECT line1, line2 FROM tles
+            ORDER BY tle_timestamp DESC
+            LIMIT 1;
+        """, (norad_id,))
+        row = c.fetchone()
+        conn.close()
+        return row
 
     def pase_ya_programado(self, task_id):
         """Checks if a task is already scheduled in the planning database."""

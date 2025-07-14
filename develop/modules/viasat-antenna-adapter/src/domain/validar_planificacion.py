@@ -1,5 +1,4 @@
 """Module that validates the different types of messages"""
-import os
 import re
 import logging
 from abc import ABC, abstractmethod
@@ -23,8 +22,9 @@ class ValidateTLE(Validator):
     def validate(self, menssage: dict) -> bool:
         """Valida un mensaje TLE."""
         if menssage["norad_id"] in self.get_satellites_planificados():
-            if self.validate_tle_format(menssage['tle']):
-                return True
+            if self.validate_tle_format(menssage):
+                if self.is_latest_tle(menssage):
+                    return True
         return False
 
     def get_satellites_planificados(self):
@@ -79,7 +79,7 @@ class ValidateTLE(Validator):
 
     def is_latest_tle(self, tle : dict) -> bool:
         """Verifica que el TLE sea el ultimo"""
-        last_tle_in_db = self.sqlite_manager.get_last_tle()
+        last_tle_in_db = self.sqlite_manager.get_last_tle(tle['norad_id'])
 
         if (last_tle_in_db[1].strip() != tle['line1'] or last_tle_in_db[2].strip() != tle['line2']):
             self.logger.debug("El TLE es diferente al anterior. Lineas: %s TLE nuevo: %s", last_tle_in_db, tle)
@@ -87,13 +87,14 @@ class ValidateTLE(Validator):
             new_tle_date = self.tle_epoch_to_datetime(tle['line1'].split()[3])
             if new_tle_date > old_tle_date:
                 self.logger.debug("Comparacion de Epoch Validado = OK")
+                self.logger.info("Nuevo TLE - UPSERT en la BD")
                 self.sqlite_manager.upsert_tle(tle=tle)
                 return True
             self.logger.debug("Comparacion de Epoch Validado = Err -> TLE con epoch menor al anterior")
         self.logger.debug("TLE ya recibido, rechazando....")
         return False
 
-class ValidarPlann():
+class ValidatePlann():
     """Clase para validar mensajes entrantes de Kafka."""
     #| Validación                                 | ¿Cómo hacerlo?                                                                |
     #| ------------------------------------------ | ----------------------------------------------------------------------------- |
@@ -129,3 +130,24 @@ class ValidarPlann():
         # Implementar la logica para obtener las actividades
         # Consulta a la base de datos o cache por las actividades
         return ['plann1', 'plann2']  # Ejemplo de actividades programadas
+
+    def validate_task(self, task: dict):
+        """Valida que los campos requeridos estén según la acción"""
+        action = task.get("action")
+        if action == "ADD":
+            required = ["task_id", "satellite", "config_id", "antenna_id", "start", "end"]
+        elif action == "CANCEL":
+            required = ["task_id"]
+        elif action == "PURGE":
+            required = []  # solo action
+        else:
+            raise ValueError(f"Acción no reconocida: {action}")
+
+        for field in required:
+            if field not in task:
+                raise ValueError(f"Campo requerido '{field}' faltante en tarea con acción {action}")
+
+    def format_vfi_time(dt: datetime) -> str:
+        """Validar el formato de fecha"""
+        #"""Convierte datetime a formato VFI: YYYY DDD HH:MM:SS"""
+        return dt.strftime("%Y %j %H:%M:%S")
