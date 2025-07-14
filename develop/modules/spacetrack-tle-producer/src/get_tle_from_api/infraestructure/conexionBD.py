@@ -1,17 +1,19 @@
 import psycopg2
-import yaml
+import json
 
 
 def load_config():
-    with open('configs/config.yaml', 'r') as f:
-        return yaml.safe_load(f)
+    with open('configs/config.json', 'r') as f:
+        return json.load(f)
     
 def obtener_listado_satelites() -> list[dict]:
         config = load_config()
-        conn = psycopg2.connect(config)
+        db_config = config["database"]
+        conn = psycopg2.connect(**db_config)
         with conn.cursor() as cur:
             cur.execute("SELECT norad_id FROM satellites WHERE get_from_api = TRUE;")
             columns = [desc[0] for desc in cur.description]
+            print(columns)
             results = [dict(zip(columns, row)) for row in cur.fetchall()]
         conn.close()
         print("Resultados de BD:", results)
