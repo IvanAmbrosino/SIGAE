@@ -1,7 +1,8 @@
-from skyfield.api import EarthSatellite, load, wgs84
+from skyfield.api import EarthSatellite, load, wgs84, EarthSatellite
 from math import floor
 from domain.tle_pass import TleData, PassActivity
 import re
+from typing import List
 from typing import List
 
 
@@ -19,31 +20,47 @@ def get_norad_id(line1: str) -> str:
     raise ValueError("Formato de TLE inválido")
 
 
-def compute_passes(tle: TleData, start_time, end_time) -> List[PassActivity]:
+
+
+def compute_passes(tle: TleData, start_time, end_time, min_elevation: float = 0.0) -> List[PassActivity]:
     ts = load.timescale()
     satellite = EarthSatellite(tle.line1, tle.line2, tle.satellite_id, ts)
     station = wgs84.latlon(STATION_LAT, STATION_LON, STATION_ELEV)
     t0 = ts.utc(start_time)
     t1 = ts.utc(end_time)
 
-    times, events = satellite.find_events(station, t0, t1, altitude_degrees=10.0)
+    # Aquí usamos min_elevation para el filtro en find_events
+    times, events = satellite.find_events(station, t0, t1, altitude_degrees=min_elevation)
     pasadas = []
 
     for i in range(0, len(events), 3):
         if i + 2 < len(events):
             aos = times[i].utc_datetime()
-            max_elev = times[i + 1].utc_datetime()
+            max_elev_time = times[i + 1]
             los = times[i + 2].utc_datetime()
             duration = int((los - aos).total_seconds())
 
+            # Calculamos elevación máxima real (en grados) en el tiempo de máxima elevación
+            difference = satellite - station
+            topocentric = difference.at(max_elev_time)
+            alt, az, distance = topocentric.altaz()
+
+            max_elevation_deg = alt.degrees
+
+            # Filtrar pasadas que no alcancen la elevación mínima requerida
+            if max_elevation_deg < min_elevation:
+                continue
+
             orbit_number = compute_orbit_number(satellite, aos)
+
             pasada = PassActivity(
                 satellite_id=tle.satellite_id,
                 orbit_number=orbit_number,
                 start_time=aos,
-                max_elevation_time=max_elev,
+                max_elevation_time=max_elev_time.utc_datetime(),
                 end_time=los,
-                duration=duration
+                duration=duration,
+                max_elevation=max_elevation_deg
             )
             pasadas.append(pasada)
 

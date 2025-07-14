@@ -25,12 +25,13 @@ def get_db_connection(config):
 def save_pass_activities(conn, pasadas: List[PassActivity]):
     sql = """
     INSERT INTO activities
-    (id, satellite_id, orbit_number, start_time, max_elevation_time, end_time, duration, status, priority, created_at, updated_at)
+    (id, satellite_id, orbit_number, start_time, max_elevation_time, max_elevation, end_time, duration, status, priority, created_at, updated_at)
     VALUES %s
     ON CONFLICT (satellite_id, orbit_number)
     DO UPDATE SET
         start_time = EXCLUDED.start_time,
         max_elevation_time = EXCLUDED.max_elevation_time,
+        max_elevation = EXCLUDED.max_elevation,
         end_time = EXCLUDED.end_time,
         duration = EXCLUDED.duration,
         status = EXCLUDED.status,
@@ -41,10 +42,11 @@ def save_pass_activities(conn, pasadas: List[PassActivity]):
     for pasada in pasadas:
         values.append((
             str(uuid.uuid4()),
-            pasada.satellite_id,  # ← ahora es el norad_id
+            pasada.satellite_id,
             pasada.orbit_number,
             pasada.start_time,
             pasada.max_elevation_time,
+            float(pasada.max_elevation),
             pasada.end_time,
             pasada.duration,
             pasada.status.value,
@@ -75,3 +77,56 @@ def save_tle_data(conn, tle: TleData):
             tle.created_at,
         ))
         conn.commit()
+
+
+def get_ground_station_config(conn, station_name: str = "Estación Córdoba"):
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT gsc.default_propagation_hours, gsc.night_start_hour, gsc.night_end_hour
+            FROM ground_stations gs
+            JOIN ground_station_configurations gsc ON gs.id = gsc.ground_station_id
+            WHERE gs.name = %s AND gs.is_active = TRUE
+            LIMIT 1
+        """, (station_name,))
+        row = cur.fetchone()
+    if row:
+        return {
+            'default_propagation_hours': row[0],
+            'night_start_hour': row[1],
+            'night_end_hour': row[2]
+        }
+    else:
+        return {
+            'default_propagation_hours': 24,
+            'night_start_hour': 20,
+            'night_end_hour': 6
+        }
+
+
+def get_satellite_by_id(conn, satellite_id: str):
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT id, name, priority_level, description,
+                is_active, can_propagate, allow_daytime_propagation, allow_nighttime_propagation,
+                min_elevation, max_elevation
+            FROM satellites
+            WHERE id = %s
+            LIMIT 1
+        """, (satellite_id,))
+        row = cur.fetchone()
+
+    if not row:
+        return None
+
+    return {
+        'id': row[0],
+        'name': row[1],
+        'priority_level': row[2],
+        'description': row[3],
+        'is_active': row[4],
+        'can_propagate': row[5],
+        'allow_daytime_propagation': row[6],
+        'allow_nighttime_propagation': row[7],
+        'min_elevation': float(row[8]) if row[8] is not None else None,
+        'max_elevation': float(row[9]) if row[9] is not None else None,
+    }

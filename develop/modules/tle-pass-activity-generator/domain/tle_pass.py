@@ -28,6 +28,7 @@ class PassActivity:
         max_elevation_time: datetime,
         end_time: datetime,
         duration: int,
+        max_elevation: float,
         status: Status = Status.NEW,
         priority: Priority = Priority.MEDIUM,
         orbit_number: str | None = None,
@@ -37,6 +38,7 @@ class PassActivity:
         self.max_elevation_time = max_elevation_time
         self.end_time = end_time
         self.duration = duration
+        self.max_elevation = max_elevation
         self.status = status
         self.priority = priority
         self.orbit_number = orbit_number
@@ -48,7 +50,8 @@ class PassActivity:
             raise ValueError("start_time debe ser menor que end_time")
         if self.duration <= 0:
             raise ValueError("duration debe ser positivo")
-        # más validaciones según reglas del dominio
+        if not (0 <= self.max_elevation <= 180):
+            raise ValueError("max_elevation debe estar entre 0 y 180 grados")
 
     def update_status(self, new_status: Status):
         self.status = new_status
@@ -63,6 +66,7 @@ class PassActivity:
             "max_elevation_time": self.max_elevation_time,
             "end_time": self.end_time,
             "duration": self.duration,
+            "max_elevation": self.max_elevation,
             "status": self.status.value,
             "priority": self.priority.value,
             "orbit_number": self.orbit_number,
