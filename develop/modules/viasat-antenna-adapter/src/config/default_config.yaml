@@ -1,0 +1,48 @@
+app:
+  antenna_id: "ANTENA_DEFAULT" # Nombre de la unidad
+  broadcast_tle: false # Acepta todos los TLE
+  freshness_hours_tle: 48 # 48 hs para validar que un tle este actualizado o no (freshness)
+  minutes_min_to_load: 5 # Tiempo en minutos minimo antes de ejecutarse una pasada para cargar una nueva tarea
+send:
+  connection_method: "direct" # / tunnel / double_tunnel
+  sleep_time: 60 # Espera por la respuesta de la antena
+  server_config:
+    host: "10.0.100.220"
+    username: "soporte"
+    password: "/app/password/soporte_passwd"
+    destination_path: "/home/soporte/etc/remote"
+  jump_server:
+    host: "10.0.100.220"
+    username: "soporte"
+    password: "/app/password/soporte_passwd"
+  second_jump_server:
+    host: "10.0.100.220"
+    username: "soporte"
+    password: "/app/password/soporte_passwd"
+kafka:
+  bootstrap_servers: "kafka-broker-1:9092,kafka-broker-2:9092,kafka-broker-3:9092"
+  schema_registry_url: "http://schema-registry:8081"
+  group_id: "tle-consumer"
+  auto_offset_reset: "earliest" # / latest -> Si se quieren consultar todos o solamente los nuevos mensajes entrantes
+  enable_auto_commit: false # Se realiza el commit manualmente al finalizar de procesar el mensaje
+  topic: ["TLE","PLANN"]
+  waiting_time: 30
+  max_retries: 5
+logs:
+  folder: "logs"
+  filename: "PostTLE.log"
+  rotation: 5,
+  size: 5000000
+  log_level: "DEBUG" # / DEBUG
+files:
+  tle_load_filename: "rciEphem_PLANNER_LOAD.txt"
+  tle_status_filename: "importEphem_PLANNER_LOAD.txt"
+  planning_load_filename: "rciSched_PLANNER_LOAD.txt"
+  planning_status_filename: "importSched_PLANNER_LOAD.txt"
+  accept_string: "ACCEPTED"
+mail:
+  notifications: true
+  mailserver: "200.16.81.74"
+  from: "email-agent@conae.gov.ar"
+  to: ["cgss.systemsupport@conae.gov.ar"]
+  attachments: ""

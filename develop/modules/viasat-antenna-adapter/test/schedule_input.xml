@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Schedule xsi:schemaLocation="./schedule.xsd schedule.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="./schedule.xsd">
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_194_091455</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 194 09:14:55</StartTime>
+      <EndTime>2025 194 09:25:58</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_194_100614</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 194 10:06:14</StartTime>
+      <EndTime>2025 194 10:19:11</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_194_105036</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 194 10:50:36</StartTime>
+      <EndTime>2025 194 11:04:11</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_194_114225</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 194 11:42:25</StartTime>
+      <EndTime>2025 194 11:55:39</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_194_122705</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 194 12:27:05</StartTime>
+      <EndTime>2025 194 12:39:09</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_194_131908</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 194 13:19:08</StartTime>
+      <EndTime>2025 194 13:29:13</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_194_193349</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 194 19:33:49</StartTime>
+      <EndTime>2025 194 19:44:25</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_194_201647</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 194 20:16:47</StartTime>
+      <EndTime>2025 194 20:29:10</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_194_210741</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 194 21:07:41</StartTime>
+      <EndTime>2025 194 21:21:05</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_194_215204</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 194 21:52:04</StartTime>
+      <EndTime>2025 194 22:05:36</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_194_224431</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 194 22:44:31</StartTime>
+      <EndTime>2025 194 22:57:10</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_194_233044</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 194 23:30:44</StartTime>
+      <EndTime>2025 194 23:41:08</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_195_133719</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 195 13:37:19</StartTime>
+      <EndTime>2025 195 13:46:26</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_195_124514</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 195 12:45:14</StartTime>
+      <EndTime>2025 195 12:56:39</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_195_120031</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 195 12:00:31</StartTime>
+      <EndTime>2025 195 12:13:24</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_195_110840</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 195 11:08:40</StartTime>
+      <EndTime>2025 195 11:22:12</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_195_102412</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 195 10:24:12</StartTime>
+      <EndTime>2025 195 10:37:31</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_195_093245</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 195 09:32:45</StartTime>
+      <EndTime>2025 195 09:44:42</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_195_230304</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 195 23:03:04</StartTime>
+      <EndTime>2025 195 23:15:04</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_195_221017</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 195 22:10:17</StartTime>
+      <EndTime>2025 195 22:23:37</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_195_212536</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 195 21:25:36</StartTime>
+      <EndTime>2025 195 21:39:09</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_195_203426</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 195 20:34:26</StartTime>
+      <EndTime>2025 195 20:47:18</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1A_2025_195_195112</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1A</Satellite>
+      <StartTime>2025 195 19:51:12</StartTime>
+      <EndTime>2025 195 20:02:34</EndTime>
+      <ConfigID>15</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>
+  <Task xsi:schemaLocation="./schedule.xsd schedule.xsd">
+    <TaskID>VIASAT_SAOCOM-1B_2025_195_190126</TaskID>
+    <Action>ADD</Action>
+    <Track xsi:schemaLocation="./schedule.xsd schedule.xsd">
+      <Satellite>SAOCOM-1B</Satellite>
+      <StartTime>2025 195 19:01:26</StartTime>
+      <EndTime>2025 195 19:10:29</EndTime>
+      <ConfigID>20</ConfigID>
+      <AntennaID>VIASAT</AntennaID>
+      <PreTest xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>No</Enabled>
+        <StartOffsetTime>300</StartOffsetTime>
+      </PreTest>
+      <PrePass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <StartOffsetTime>120</StartOffsetTime>
+      </PrePass>
+      <PostPass xsi:schemaLocation="./schedule.xsd schedule.xsd">
+        <Enabled>Yes</Enabled>
+        <Duration>120</Duration>
+      </PostPass>
+    </Track>
+  </Task>

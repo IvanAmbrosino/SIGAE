@@ -19,11 +19,10 @@ class Connection(ABC):
 
 class SFTPDirect(Connection):
     """Clase que implementa la estrategia de conexión SFTP directa"""
-    def __init__(self, host, username, password, destination_path):
+    def __init__(self, host, username, password):
         self.host               = host
         self.username           = username
         self.password           = password
-        self.destination_path   = destination_path
         self.ssh_client         = None
         self.sftp_client        = None
         self.logger = logging.getLogger("SFTPDirect")
@@ -72,7 +71,7 @@ class SFTPDirect(Connection):
         except paramiko.ChannelException as e:
             self.logger.error("Error enviando el archivo al servidor destino: %s",e)
         except paramiko.ssh_exception.SSHException as e:
-            self.logger.error("Error en la conexion SSH: %s",e)
+            self.logger.error("[GET ARCHIVE]Error en la conexion SSH: %s",e)
         finally:
             self.close_connections()
         return sended
@@ -85,10 +84,10 @@ class SFTPDirect(Connection):
         sended = False
         self.connect()
         try:
-            for i in enumerate(paths_to_file):
-                self.sftp_client.put(paths_to_file[i], destination_paths[i])
+            for src, dst in zip(paths_to_file, destination_paths):
+                self.sftp_client.put(src, dst)
         except Exception as e: # pylint: disable=broad-exception-caught
-            self.logger.error("Error en la conexion SSH: %s",e)
+            self.logger.error("[SEND ARCHIVE] Error en la conexion SSH: %s",e)
         finally:
             self.close_connections()
         return sended
@@ -139,18 +138,18 @@ class SFTPTunnel(Connection):
                     password=self.target_password
                 )
                 self.sftp = paramiko.SFTPClient.from_transport(self.transport)
-                for i in enumerate(paths_to_file):
-                    self.sftp.put(paths_to_file[i], destination_paths[i])
+                for src, dst in zip(paths_to_file, destination_paths):
+                    self.sftp.put(src, dst)
                 sended = True
 
         except paramiko.ChannelException as e:
-            self.logger.error("Error enviando el archivo al servidor destino: %s",e)
+            self.logger.error("[SEND FILE] Error enviando el archivo al servidor destino: %s",e)
         except paramiko.ssh_exception.SSHException as e:
-            self.logger.error("Error en la conexion SSH: %s",e)
+            self.logger.error("[SEND FILE] Error en la conexion SSH: %s",e)
         except subprocess.CalledProcessError as e:
-            self.logger.error("El TLE fue rechazado: %s",e)
+            self.logger.error("[SEND FILE] El TLE fue rechazado: %s",e)
         except BaseSSHTunnelForwarderError as e:
-            self.logger.error("Failed to connect to server: %s. Retrying in 5 seconds...",e)
+            self.logger.error("[SEND FILE] Failed to connect to server: %s. Retrying in 5 seconds...",e)
         finally:
             self.close_connections()
         return sended
@@ -177,13 +176,13 @@ class SFTPTunnel(Connection):
                 sended = True
 
         except paramiko.ChannelException as e:
-            self.logger.error("Error enviando el archivo al servidor destino: %s",e)
+            self.logger.error("[GET FILE] Error enviando el archivo al servidor destino: %s",e)
         except paramiko.ssh_exception.SSHException as e:
-            self.logger.error("Error en la conexion SSH: %s",e)
+            self.logger.error("[GET FILE] Error en la conexion SSH: %s",e)
         except subprocess.CalledProcessError as e:
-            self.logger.error("El TLE fue rechazado: %s",e)
+            self.logger.error("[GET FILE] El TLE fue rechazado: %s",e)
         except BaseSSHTunnelForwarderError as e:
-            self.logger.error("Failed to connect to server: %s. Retrying in 5 seconds...",e)
+            self.logger.error("[GET FILE] Failed to connect to server: %s. Retrying in 5 seconds...",e)
         finally:
             self.close_connections()
         return sended
@@ -206,42 +205,6 @@ class SFTPDobleTunnel(Connection):
         self.transport          = None
         self.logger = logging.getLogger("SFTPDoubleTunnel")
 
-    def connect(self):
-        """Carga el TLE pasado por parametro en la antena Viasat de 6.1 y 5.4 las cuales funcionan con SCC virtuales y hay q realizar un puente."""
-        try:
-            with SSHTunnelForwarder(
-                (self.jump1_host, 22),
-                ssh_username=self.jump1_user,
-                ssh_private_key=None,
-                ssh_password=self.jump1_pass,
-                remote_bind_address=(self.jump2_host, 22),
-            ) as tunnel1:
-                self.logger.info("Primer túnel creado (hacia intermediario_1).")
-                with SSHTunnelForwarder(
-                    ("127.0.0.1", tunnel1.local_bind_port),
-                    ssh_username=self.jump2_user,
-                    ssh_private_key=None,
-                    ssh_password=self.jump2_pass,
-                    remote_bind_address=(self.target_host, 22),
-                ) as tunnel2:
-                    self.logger.info("Segundo túnel creado (hacia intermediario_2).")
-                    self.transport = paramiko.Transport(("127.0.0.1", tunnel2.local_bind_port))
-                    self.transport.connect(
-                        username=self.target_user,
-                        password=self.target_pass
-                    )
-                    self.sftp = paramiko.SFTPClient.from_transport(self.transport)
-                    return True
-
-        except paramiko.ChannelException as e:
-            self.logger.error("Error enviando el archivo al servidor destino: %s",e)
-        except paramiko.ssh_exception.SSHException as e:
-            self.logger.error("Error en la conexion SSH: %s",e)
-        except subprocess.CalledProcessError as e:
-            self.logger.error("El TLE fue rechazado: %s",e)
-        except BaseSSHTunnelForwarderError as e:
-            self.logger.error("Failed to connect to server: %s. Retrying in 5 seconds...",e)
-        return False
 
     def close_connections(self):
         """Cierra las conexiones SFTP y SSH"""
@@ -288,13 +251,13 @@ class SFTPDobleTunnel(Connection):
                     sended = True
 
         except paramiko.ChannelException as e:
-            self.logger.error("Error enviando el archivo al servidor destino: %s",e)
+            self.logger.error("[GET FILE] Error enviando el archivo al servidor destino: %s",e)
         except paramiko.ssh_exception.SSHException as e:
-            self.logger.error("Error en la conexion SSH: %s",e)
+            self.logger.error("[GET FILE] Error en la conexion SSH: %s",e)
         except subprocess.CalledProcessError as e:
-            self.logger.error("El TLE fue rechazado: %s",e)
+            self.logger.error("[GET FILE] El TLE fue rechazado: %s",e)
         except BaseSSHTunnelForwarderError as e:
-            self.logger.error("Failed to connect to server: %s. Retrying in 5 seconds...",e)
+            self.logger.error("[GET FILE] Failed to connect to server: %s. Retrying in 5 seconds...",e)
         finally:
             self.close_connections()
         return sended
@@ -325,18 +288,18 @@ class SFTPDobleTunnel(Connection):
                         password=self.target_pass
                     )
                     self.sftp = paramiko.SFTPClient.from_transport(self.transport)
-                    for i in enumerate(paths_to_file):
-                        self.sftp.put(paths_to_file[i], destination_paths[i])
+                    for src, dst in zip(paths_to_file, destination_paths):
+                        self.sftp.put(src, dst)
                     sended = True
 
         except paramiko.ChannelException as e:
-            self.logger.error("Error enviando el archivo al servidor destino: %s",e)
+            self.logger.error("[SEND FILE] Error enviando el archivo al servidor destino: %s",e)
         except paramiko.ssh_exception.SSHException as e:
-            self.logger.error("Error en la conexion SSH: %s",e)
+            self.logger.error("[SEND FILE] Error en la conexion SSH: %s",e)
         except subprocess.CalledProcessError as e:
-            self.logger.error("El TLE fue rechazado: %s",e)
+            self.logger.error("[SEND FILE] El TLE fue rechazado: %s",e)
         except BaseSSHTunnelForwarderError as e:
-            self.logger.error("Failed to connect to server: %s. Retrying in 5 seconds...",e)
+            self.logger.error("[SEND FILE] Failed to connect to server: %s. Retrying in 5 seconds...",e)
         finally:
             self.close_connections()
         return sended

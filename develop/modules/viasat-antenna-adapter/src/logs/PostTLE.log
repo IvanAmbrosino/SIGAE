@@ -1,0 +1,19 @@
+2025-07-14 19:24:52,435 - 1 - Main -                        57 - INFO - Connected to Kafka successfully.
+2025-07-14 19:25:24,995 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '43641', 'satellite_name': 'SAOCOM 1A', 'line1': '1 27424U 02022A   25195.59461420  .00000577  00000-0  12652-3 0  9996', 'line2': '2 27424  98.3792 154.2929 0001113  53.9678   1.0769 14.61344720233952', 'timestamp': '2025-07-14T14:16:14Z'}
+2025-07-14 19:25:24,998 - 1 - Main -                        107 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
+2025-07-14 19:25:25,648 - 1 - Main -                        114 - ERROR - Error al enviar el archivo de TLE
+2025-07-14 19:26:42,728 - 1 - Main -                        57 - INFO - Connected to Kafka successfully.
+2025-07-14 19:27:23,791 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '43641', 'satellite_name': 'SAOCOM 1A', 'line1': '1 27424U 02022A   25195.59461420  .00000577  00000-0  12652-3 0  9996', 'line2': '2 27424  98.3792 154.2929 0001113  53.9678   1.0769 14.61344720233952', 'timestamp': '2025-07-14T14:16:14Z'}
+2025-07-14 19:27:23,792 - 1 - Main -                        107 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
+2025-07-14 19:27:23,794 - 1 - Main -                        64 - DEBUG - Listado de archivos locales: ['/app/tmp/tmp_file.txt', '/app/tmp/tmp_file.txt.done']
+2025-07-14 19:27:23,795 - 1 - Main -                        65 - DEBUG - Listado de archivos remotos: ['rciEphem_PLANNER_LOAD.txt', 'rciEphem_PLANNER_LOAD.txt.done']
+2025-07-14 19:27:24,441 - 1 - Main -                        116 - ERROR - Error al enviar el archivo de TLE
+2025-07-14 19:32:04,698 - 1 - Main -                        57 - INFO - Connected to Kafka successfully.
+2025-07-14 19:32:47,961 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '43641', 'satellite_name': 'SAOCOM 1A', 'line1': '1 27424U 02022A   25195.59461420  .00000577  00000-0  12652-3 0  9996', 'line2': '2 27424  98.3792 154.2929 0001113  53.9678   1.0769 14.61344720233952', 'timestamp': '2025-07-14T14:16:14Z'}
+2025-07-14 19:32:47,962 - 1 - Main -                        107 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
+2025-07-14 19:34:18,368 - 1 - Main -                        57 - INFO - Connected to Kafka successfully.
+2025-07-14 19:34:21,449 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '43641', 'satellite_name': 'SAOCOM 1A', 'line1': '1 27424U 02022A   25195.59461420  .00000577  00000-0  12652-3 0  9996', 'line2': '2 27424  98.3792 154.2929 0001113  53.9678   1.0769 14.61344720233952', 'timestamp': '2025-07-14T14:16:14Z'}
+2025-07-14 19:34:21,450 - 1 - Main -                        107 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
+2025-07-14 19:34:21,452 - 1 - Main -                        66 - DEBUG - Listado de archivos locales: ['/app/tmp/tmp_file.txt', '/app/tmp/tmp_file.txt.done']
+2025-07-14 19:34:21,452 - 1 - Main -                        67 - DEBUG - Listado de archivos remotos: ['/home/soporte/etc/remote/rciEphem_PLANNER_LOAD.txt', '/home/soporte/etc/remote/rciEphem_PLANNER_LOAD.txt.done']
+2025-07-14 19:34:22,098 - 1 - Main -                        126 - ERROR - Error al enviar el archivo de TLE

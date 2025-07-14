@@ -4,6 +4,8 @@ import os
 from abc import ABC, abstractmethod
 from lxml import etree
 
+from infraestructure.config_manager import ConfigManager
+
 class MakeFile(ABC):
     """Abstract class to define the make-file strategy"""
 
@@ -28,6 +30,7 @@ class MakeTLEFile(MakeFile):
         Receives a list of TLEs and make the file.
         """
         tle_string = self.header # Inicializa el string con el header
+        content = self.traduce_sat_name([content])
         with open(self.tmp_path, "w", encoding='utf-8') as tle_file:
             for tle in content:
                 tle_string += "\n".join([tle["satellite_name"],tle["line1"],tle["line2"]]) + "\n"
@@ -39,6 +42,17 @@ class MakeTLEFile(MakeFile):
             pass
 
         return True
+
+    def traduce_sat_name(self, content: list[dict]) -> list[dict]:
+        """Realiza la traduccion del nombre del satelite a uno que pueda interpretar la antena"""
+        return_list = []
+        list_translation = ConfigManager().load_translation_config()
+        for tle in content:
+            for name, altname in list_translation:
+                if tle['satellite_name'] == name:
+                    tle['satellite_name'] = altname
+            return_list.append(tle)
+        return return_list
 
     def remove_tmp_files(self, path: str = '/app/tmp/') -> bool:
         """Remove all tmp files"""

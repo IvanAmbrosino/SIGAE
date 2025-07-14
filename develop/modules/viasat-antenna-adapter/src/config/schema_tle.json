@@ -1,0 +1,13 @@
+{
+  "namespace": "com.example.tle",
+  "type": "record",
+  "name": "TLEData",
+  "fields": [
+    { "name": "message_type", "type": "string" },
+    { "name": "norad_id", "type": "string" },
+    { "name": "satellite_name", "type": "string" },
+    { "name": "line1", "type": "string" },
+    { "name": "line2", "type": "string" },
+    { "name": "timestamp", "type": "string" }
+  ]
+}

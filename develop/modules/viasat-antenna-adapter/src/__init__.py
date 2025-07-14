@@ -18,7 +18,7 @@ class AntenaAdapter:
 
         self.script_dir = os.path.dirname(os.path.abspath(__file__)) # Directory of the script
         self.logs_config = self.config['logs']                       # Logging configuration
-        kafka_config = self.config['kafka_conn']                     # Kafka connection configuration
+        kafka_config = self.config['kafka']                          # Kafka connection configuration
         self.load_logger()                                           # Carga la configuracion de los logs
 
         self.kafka_adapter = KafkaConnector(kafka_config, logger)
@@ -35,8 +35,10 @@ class AntenaAdapter:
         """Load logger configuration."""
         try:
             if not logger.handlers:
-                log_level = logging.DEBUG if self.logs_config["debug_mode"] else logging.INFO
-                logger.setLevel(log_level)
+                if self.logs_config['log_level']:
+                    logger.setLevel(self.logs_config['log_level'])
+                else:
+                    logger.setLevel(logging.INFO)
                 handler = logging.handlers.RotatingFileHandler(
                     filename=(f'{self.script_dir}/{self.logs_config["folder"]}/{self.logs_config["filename"]}'),
                     mode='a', maxBytes=self.logs_config["size"],

@@ -13,10 +13,7 @@
       },
       "default": "full_plan"
     },
-    {
-      "name": "antenna_id",
-      "type": "string"
-    },
+    { "name": "antenna_id", "type": "string" },
     {
       "name": "timestamp",
       "type": {
@@ -24,10 +21,7 @@
         "logicalType": "timestamp-millis"
       }
     },
-    {
-      "name": "source",
-      "type": "string"
-    },
+    { "name": "source", "type": "string" },
     {
       "name": "plan",
       "type": {
@@ -37,34 +31,12 @@
           "type": "record",
           "fields": [
             { "name": "task_id", "type": "string" },
+            { "name": "action", "type": "string" },
             { "name": "satellite", "type": "string" },
             { "name": "norad_id", "type": "string" },
             { "name": "config_id", "type": "int" },
-            {
-              "name": "start",
-              "type": {
-                "type": "long",
-                "logicalType": "timestamp-millis"
-              }
-            },
-            {
-              "name": "end",
-              "type": {
-                "type": "long",
-                "logicalType": "timestamp-millis"
-              }
-            },
-            {
-              "name": "tle",
-              "type": {
-                "name": "TLEData",
-                "type": "record",
-                "fields": [
-                  { "name": "line1", "type": "string" },
-                  { "name": "line2", "type": "string" }
-                ]
-              }
-            },
+            { "name": "start", "type": "string" },
+            { "name": "end", "type": "string" },
             { "name": "prepass_seconds", "type": "int", "default": 120 },
             { "name": "postpass_seconds", "type": "int", "default": 60 }
           ]

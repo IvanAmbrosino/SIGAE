@@ -5,15 +5,15 @@ from datetime import datetime, timedelta
 # -----------------------------------------------
 # CONFIGURACIÓN
 # -----------------------------------------------
-PLANNING_DB = "planning_cache.db"
-TLE_DB = "tle_cache.db"
+PLANNING_DB = "/app/db/planning_cache.db"
+TLE_DB = "/app/db/tle_cache.db"
 
 # -----------------------------------------------
 # CREACIÓN DE LAS BASES
 # -----------------------------------------------
 class SQLiteManager:
     """Database Manager"""
-    def init_planning_db(self):
+    def init_planning_db(self) -> None:
         """Initializes the planning database."""
         conn = sqlite3.connect(PLANNING_DB)
         c = conn.cursor()
@@ -32,7 +32,7 @@ class SQLiteManager:
         conn.commit()
         conn.close()
 
-    def init_tle_db(self):
+    def init_tle_db(self) -> None:
         """Initializes the TLE database."""
         conn = sqlite3.connect(TLE_DB)
         c = conn.cursor()
@@ -53,7 +53,7 @@ class SQLiteManager:
     # INSERCIÓN / ACTUALIZACIÓN
     # -----------------------------------------------
 
-    def upsert_planificacion(self, pase):
+    def upsert_planificacion(self, pase) -> None:
         """Inserts or updates a planning entry in the database."""
         conn = sqlite3.connect(PLANNING_DB)
         c = conn.cursor()
@@ -75,7 +75,7 @@ class SQLiteManager:
         conn.commit()
         conn.close()
 
-    def upsert_tle(self, tle):
+    def upsert_tle(self, tle) -> None:
         """Inserts or updates a TLE entry in the database."""
         conn = sqlite3.connect(TLE_DB)
         c = conn.cursor()
@@ -91,17 +91,38 @@ class SQLiteManager:
         conn.close()
 
     # -----------------------------------------------
+    # DELETE / PURGE
+    # -----------------------------------------------
+
+    def delete_activity_by_id(self, task_id: str) -> None:
+        """Delete activity by ID"""
+        conn = sqlite3.connect(TLE_DB)
+        c = conn.cursor()
+        c.execute(f"DELETE tles WHERE task_id = {task_id}")
+        conn.commit()
+        conn.close()
+
+    def purge_activities(self) -> None:
+        """Delete all activities"""
+        conn = sqlite3.connect(TLE_DB)
+        c = conn.cursor()
+        c.execute("DELETE tles")
+        conn.commit()
+        conn.close()
+
+    # -----------------------------------------------
     # CONSULTAS
     # -----------------------------------------------
 
-    def get_freshness_tle(self, norad_id, freshness_hours=48):
+    def get_freshness_tle(self, norad_id, freshness_hours=48) -> dict:
         """Obtains the TLE for a given NORAD ID, checking freshness."""
         conn = sqlite3.connect(TLE_DB)
         c = conn.cursor()
         limit = (datetime.utcnow() - timedelta(hours=freshness_hours)).isoformat()
         c.execute("""
             SELECT line1, line2 FROM tles
-            WHERE norad_id = ? AND timestamp > ? ORDER BY updated_at DESC LIMIT 1
+            WHERE norad_id = ? AND timestamp > ? 
+            ORDER BY updated_at DESC LIMIT 1
         """, (norad_id, limit))
         row = c.fetchone()
         conn.close()
@@ -110,20 +131,21 @@ class SQLiteManager:
         print(f"No TLE found for NORAD ID {norad_id} or it is too old.")
         return None
 
-    def get_last_tle(self, norad_id):
+    def get_last_tle(self, norad_id) -> list:
         """Obtains last TLE order by timestamp."""
         conn = sqlite3.connect(TLE_DB)
         c = conn.cursor()
         c.execute("""
             SELECT line1, line2 FROM tles
-            ORDER BY tle_timestamp DESC
+            WHERE norad_id = ?
+            ORDER BY timestamp DESC
             LIMIT 1;
         """, (norad_id,))
         row = c.fetchone()
         conn.close()
         return row
 
-    def pase_ya_programado(self, task_id):
+    def pase_ya_programado(self, task_id) -> bool:
         """Checks if a task is already scheduled in the planning database."""
         conn = sqlite3.connect(PLANNING_DB)
         c = conn.cursor()
@@ -132,7 +154,22 @@ class SQLiteManager:
         conn.close()
         return exists
 
-    def get_satellites_planificados(self):
+    def exist_passes_in_window(self,init_time: datetime,end_time: datetime) -> bool:
+        """Returns true if there are activities in a specified window"""
+        conn = sqlite3.connect(PLANNING_DB)
+        c = conn.cursor()
+        where_1 = f"start_time <= {init_time} and end_time > {init_time}" # Empieza antes y termina despues del init
+        where_2 = f"start_time < {end_time} and  end_time < {end_time}" # Empieza antes y termina despues del end
+        where_3 = f"start_time >= {init_time} and end_time <= {end_time}" # La actividad vieja se encuentra completamente adentro de la nueva
+        where_4 = f"start_time <= {init_time} and end_time >= {end_time}" # La actividad nueva esta adentro de otra actividad vieja
+        c.execute(f"SELECT norad_id FROM planificaciones WHERE {where_1} or {where_2} or {where_3} or {where_4}")
+        rows = c.fetchall()
+        conn.close()
+        if rows:
+            return True
+        return False
+
+    def get_satellites_planificados(self) -> list:
         """
         Gets the list of satellites planned for the unit
         Returns a list of satellites without repeating itself
@@ -147,21 +184,22 @@ class SQLiteManager:
             if row not in list_satellites:
                 list_satellites.append(row)
         conn.close()
+        return list_satellites
 
     # ------------------------------------------------
     # LIMPIEZA DE ENTRADAS ANTIGUAS - GARBAJE COLECTOR
     # ------------------------------------------------
 
-    def limpiar_tle(self, dias=3):
+    def limpiar_tle(self, dias: int = 3) -> None:
         """Cleans up old TLE entries older than a specified number of days."""
         limite = (datetime.utcnow() - timedelta(days=dias)).isoformat()
         conn = sqlite3.connect(TLE_DB)
         c = conn.cursor()
-        c.execute("DELETE FROM tles WHERE tle_timestamp < ?", (limite,))
+        c.execute("DELETE FROM tles WHERE timestamp < ?", (limite,))
         conn.commit()
         conn.close()
 
-    def limpiar_planificaciones(self, dias=1):
+    def limpiar_planificaciones(self, dias: int = 1) -> None:
         """Cleans up old planning entries older than a specified number of days."""
         limite = (datetime.utcnow() - timedelta(days=dias)).isoformat()
         conn = sqlite3.connect(PLANNING_DB)
@@ -173,7 +211,7 @@ class SQLiteManager:
     # -----------------------------------------------
     # INIT de ambas bases
     # -----------------------------------------------
-    def inicializar(self):
+    def inicializar(self) -> None:
         """Initializes both databases if they do not exist."""
         self.init_planning_db()
         self.init_tle_db()

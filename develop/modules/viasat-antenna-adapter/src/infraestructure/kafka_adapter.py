@@ -66,7 +66,7 @@ class KafkaConnector:
         """Funcion que se suscribe a los topicos disponibles en el broker"""
         # Recorremos el listado de satelites y nos suscribimos a los que esten disponibles en el broker
         # Tener en cuenta que si intentamos suscribirnos a un topico que no existe lanza error
-        list_topics = ["TLE","PLAN"]
+        list_topics = self.config['topic']
         self.consumer.subscribe(list_topics)
 
     def get_message(self):

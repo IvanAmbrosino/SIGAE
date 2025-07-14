@@ -3,8 +3,9 @@ import os
 import yaml
 from pathlib import Path
 
-DEFAULT_CONFIG_PATH = Path(__file__).parent / "/app/config/default_config.yaml"
+DEFAULT_CONFIG_PATH = Path("/app/config/default_config.yaml")
 MOUNTED_CONFIG_PATH = Path("/app/config/config.yaml")
+TRANSLATION_FILE = Path("/app/config/name_translation.csv")
 
 # Mapeo ENV -> Claves en el dict final
 ENV_TO_CONFIG_KEYS = {
@@ -17,10 +18,24 @@ ENV_TO_CONFIG_KEYS = {
 class ConfigManager:
     """Configuration and Environment Variables Manager"""
 
+    def read_secret(self, secret):
+        """Read secrets from docker and return it"""
+        try:
+            with open(f"{secret}", "r",encoding="utf-8") as sfile:
+                return sfile.read().strip()
+        except IOError as err:
+            print("Error leyendo los secretos: %s ",err)
+            return None
+
     def load_yaml(self, path: str) -> dict:
         """Reads a YML file passed as a parameter and return dict"""
         with open(path, "r",encoding='utf-8') as f:
             return yaml.safe_load(f)
+
+    def load_csv(self, path: str) -> list:
+        """Reads a CSV file passed as a parameter and return a list"""
+        with open(path, "r",encoding='utf-8') as f:
+            return [line.strip().split(";") for line in f.readlines()]
 
     def deep_merge(self, base: dict, override: dict) -> dict:
         """
@@ -65,3 +80,7 @@ class ConfigManager:
         config = self.apply_env_vars(config)
 
         return config
+
+    def load_translation_config(self):
+        """Carga el archivo de Traducciones de Nombres"""
+        return self.load_csv(TRANSLATION_FILE)

@@ -1,15 +1,17 @@
 services:
   viasat-direct:
-    image: viasat-tle-sender
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: viasat-tle-sender
-    hostname: viasat-tle-sender_direct
+    image: viasat-antenna-adapter:1.0.0  
+    #build:
+    #  context: .
+    #  dockerfile: Dockerfile
+    hostname: viasat-antenna-adapter
+    networks:
+      - kafka-net
     volumes:
-      - ./logs:/app/logs
-      - ./configs:/app/configs
-      - /home/iambrosino/actualiza_tle/viasat-tle-sender/test/passwd:/app/passwd
+      #- ./logs:/app/logs
+      #- ./configs:/app/configs
+      - ./:/app
+      #- /home/iambrosino/actualiza_tle/viasat-tle-sender/test/passwd:/app/passwd
 networks:
-  broker-kafka:
+  kafka-net:
     external: true
