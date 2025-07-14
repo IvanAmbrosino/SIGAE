@@ -102,6 +102,9 @@ CREATE TABLE satellites (
     allow_nighttime_propagation BOOLEAN DEFAULT TRUE,
     min_elevation DECIMAL(5, 2),
     max_elevation DECIMAL(5, 2),
+    
+    -- Nuevo campo: indica si se puede obtener info desde una API externa
+    can_fetch_from_api BOOLEAN DEFAULT FALSE,
 
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -251,11 +254,11 @@ FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 
 -- Insertar satélites de prueba
 INSERT INTO satellites
-(id, name, priority_level, description, is_active, can_propagate, allow_daytime_propagation, allow_nighttime_propagation, min_elevation, max_elevation, created_at, updated_at)
+(id, name, priority_level, description, is_active, can_propagate, allow_daytime_propagation, allow_nighttime_propagation, min_elevation, max_elevation, can_fetch_from_api, created_at, updated_at)
 VALUES
-('25544', 'ISS', 'high', 'Estación Espacial Internacional', TRUE, TRUE, TRUE, TRUE, 10.0, 90.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('27424', 'AQUA', 'medium', 'Satélite de observación de la NASA', TRUE, TRUE, FALSE, TRUE, 15.0, 85.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('39084', 'LANDSAT-8', 'critical', 'Satélite de observación terrestre', TRUE, TRUE, TRUE, FALSE, 20.0, 88.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('25544', 'ISS', 'high', 'Estación Espacial Internacional', TRUE, TRUE, TRUE, TRUE, 10.0, 90.0, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('27424', 'AQUA', 'medium', 'Satélite de observación de la NASA', TRUE, TRUE, FALSE, TRUE, 15.0, 85.0, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('39084', 'LANDSAT-8', 'critical', 'Satélite de observación terrestre', TRUE, TRUE, TRUE, FALSE, 20.0, 88.0, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insertar estación terrestre por defecto: Córdoba, Córdoba
 INSERT INTO ground_stations
