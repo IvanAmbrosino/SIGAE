@@ -26,6 +26,7 @@ services:
     volumes:
       # - /home/jere/SIGAE/develop/modules/spacetrack-tle-producer/test/password:/app/password
       - ./:/app
+      - ./configs:/app/configs
 networks:
   kafka-net:
     external: true

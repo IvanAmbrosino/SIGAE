@@ -1,0 +1,15 @@
+kafka:
+  bootstrap_servers: kafka-broker-1:9092
+  topic: _TLE
+  group_id: tle-pass-activity-group
+
+
+schema_registry:
+  url: http://schema-registry:8081/
+
+database:
+  dbname: planificacion_satelital
+  user: planificador_app
+  password: SecurePassword123!
+  host: satplan_db
+  port: 5432
