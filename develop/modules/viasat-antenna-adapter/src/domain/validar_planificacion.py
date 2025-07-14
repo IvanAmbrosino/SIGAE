@@ -10,7 +10,7 @@ class Validator(ABC):
     """Abstract class to define the validation strategy"""
 
     @abstractmethod
-    def validate(self, menssage: dict) -> bool:
+    def validate(self, message: dict) -> bool:
         """Obtiene un archivo al servidor SFTP"""
 
 class ValidateTLE(Validator):
@@ -19,11 +19,11 @@ class ValidateTLE(Validator):
         self.logger = logger
         self.sqlite_manager = SQLiteManager()
 
-    def validate(self, menssage: dict) -> bool:
+    def validate(self, message: dict) -> bool:
         """Valida un mensaje TLE."""
-        if menssage["norad_id"] in self.get_satellites_planificados():
-            if self.validate_tle_format(menssage):
-                if self.is_latest_tle(menssage):
+        if message["norad_id"] in self.get_satellites_planificados():
+            if self.validate_tle_format(message):
+                if self.is_latest_tle(message):
                     return True
         return False
 
@@ -94,7 +94,7 @@ class ValidateTLE(Validator):
         self.logger.debug("TLE ya recibido, rechazando....")
         return False
 
-class ValidatePlann():
+class ValidatePlann(Validator):
     """Clase para validar mensajes entrantes de Kafka."""
     #| Validación                                 | ¿Cómo hacerlo?                                                                |
     #| ------------------------------------------ | ----------------------------------------------------------------------------- |
@@ -110,6 +110,10 @@ class ValidatePlann():
 
     def __init__(self, logger: logging):
         self.logger = logger
+
+    def validate(self, message: dict) -> bool:
+        """Valida un mensaje Planificacion."""
+        return message
 
     def validar_tle(self, msg: dict):
         """Valida un mensaje TLE."""
@@ -147,7 +151,7 @@ class ValidatePlann():
             if field not in task:
                 raise ValueError(f"Campo requerido '{field}' faltante en tarea con acción {action}")
 
-    def format_vfi_time(dt: datetime) -> str:
+    def format_vfi_time(self, dt: datetime) -> str:
         """Validar el formato de fecha"""
         #"""Convierte datetime a formato VFI: YYYY DDD HH:MM:SS"""
         return dt.strftime("%Y %j %H:%M:%S")

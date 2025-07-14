@@ -12,7 +12,7 @@ class MakeFile(ABC):
         """Creates the file to be sent to the antenna"""
 
     @abstractmethod
-    def remove_tmp_file(self, archive: str) -> bool:
+    def remove_tmp_files(self, path: str) -> bool:
         """Delete a tmp file"""
 
 
@@ -40,12 +40,27 @@ class MakeTLEFile(MakeFile):
 
         return True
 
-    def remove_tmp_file(self, archive: str = None) -> bool:
-        try:
-            os.remove(archive or self.tmp_path)
-            return True
-        except FileNotFoundError:
-            return False
+    def remove_tmp_files(self, path: str = '/app/tmp/') -> bool:
+        """Remove all tmp files"""
+        if not os.path.isdir(path):
+            print(f"[ERROR] La ruta {path} no es un directorio válido.")
+            return
+
+        archivos = os.listdir(path)
+        if not archivos:
+            print(f"[INFO] El directorio {path} está vacío.")
+            return
+
+        for archivo in archivos:
+            archivo_path = os.path.join(path, archivo)
+            try:
+                if os.path.isfile(archivo_path):
+                    os.remove(archivo_path)
+                    print(f"[OK] Archivo eliminado: {archivo_path}")
+                else:
+                    print(f"[SKIP] No es un archivo (quizás directorio): {archivo_path}")
+            except Exception as e: # pylint: disable=broad-exception-caught
+                print(f"[ERROR] No se pudo eliminar {archivo_path}: {e}")
 
 class MakePlannFile(MakeFile):
     """Class that creates the Planning file to be sent to the antenna"""
@@ -103,9 +118,24 @@ class MakePlannFile(MakeFile):
 
         return True
 
-    def remove_tmp_file(self, archive: str = None) -> bool:
-        try:
-            os.remove(archive or self.tmp_path)
-            return True
-        except FileNotFoundError:
-            return False
+    def remove_tmp_files(self, path: str = '/app/tmp/') -> bool:
+        """Remove all tmp files"""
+        if not os.path.isdir(path):
+            print(f"[ERROR] La ruta {path} no es un directorio válido.")
+            return
+
+        archivos = os.listdir(path)
+        if not archivos:
+            print(f"[INFO] El directorio {path} está vacío.")
+            return
+
+        for archivo in archivos:
+            archivo_path = os.path.join(path, archivo)
+            try:
+                if os.path.isfile(archivo_path):
+                    os.remove(archivo_path)
+                    print(f"[OK] Archivo eliminado: {archivo_path}")
+                else:
+                    print(f"[SKIP] No es un archivo (quizás directorio): {archivo_path}")
+            except Exception as e: # pylint: disable=broad-exception-caught
+                print(f"[ERROR] No se pudo eliminar {archivo_path}: {e}")
