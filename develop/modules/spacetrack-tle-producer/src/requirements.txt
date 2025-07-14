@@ -1,3 +1,5 @@
 paramiko
 requests
 confluent-kafka[avro]
+psycopg2-binary
+confluent_kafka

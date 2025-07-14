@@ -15,6 +15,8 @@ from datetime import datetime, timedelta
 from config_manager import ConfigManager
 from get_tle import GetTleSpaceTrack
 from post_tle import PostTle
+from get_tle_from_api import GestorTLE
+
 
 logger = logging.getLogger("Main")
 

@@ -83,6 +83,7 @@ CREATE TABLE satellites (
     priority_level VARCHAR(10) CHECK (priority_level IN ('critical', 'high', 'medium', 'low')),
     description TEXT,
     is_active BOOLEAN DEFAULT TRUE,
+    get_from_api BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

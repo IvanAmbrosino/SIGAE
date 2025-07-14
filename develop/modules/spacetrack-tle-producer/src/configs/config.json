@@ -1,7 +1,7 @@
 {
     "kafka_config":{
-        "bootstrap_servers": "kafka1:9092,kafka2:9093,kafka3:9094",
-        "schema_registry_url": "http://localhost:8081",
+        "bootstrap_servers": "kafka-broker-1:9092,kafka-broker-2:9093,kafka-broker-3:9094",
+        "schema_registry_url": "http://schema-registry:8081",
         "schema_file": "tle_schema.json",
         "group_id": "tle-consumer-group",
         "client_id": "saocom-tle-publisher",
@@ -14,8 +14,8 @@
         "max_in_flight_requests_per_connection": 5
         },
     "space_track_config":{
-        "username": "ambrosino.ivan@gmail.com",
-        "password": "/app/password/spacetrack_passwd",
+        "username": "jeremiedephilippis@gmail.com",
+        "password": "/app/password/space-track_password",
         "uri_base": "https://www.space-track.org",
         "request_login": "/ajaxauth/login",
         "request_cmd_action": "/basicspacedata/query",

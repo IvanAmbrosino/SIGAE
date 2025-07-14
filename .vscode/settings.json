@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./develop/modules/spacetrack-tle-producer/src/get_tle_from_api/DAL_tle"
+    ]
+}

@@ -1,19 +1,31 @@
 
 services:
-  spacetrack-tle-publisher:
-    image: space-track-tle-publisher
+  # spacetrack-tle-publisher:
+  #   image: space-track-tle-publisher
+  #   # build:
+  #   #   context: .
+  #   #   dockerfile: Dockerfile
+  #   container_name: space-track-tle-publisher-ant7
+  #   hostname: space-track-tle-publisher-ant7
+  #   networks:
+  #     - kafka-net
+  #   volumes:
+  #     # - ./logs:/app/logs
+  #     - ./configs:/app/configs
+  #     # - ./tmp:/app/tmp
+  #     - /home/jere/SIGAE/develop/modules/spacetrack-tle-producer/test/password:/app/password
+
+  get-test-tle_from-api:
+    image: get-tle-from-api
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: space-track-tle-publisher-ant7
-    hostname: space-track-tle-publisher-ant7
+      dockerfile: Dockerfile.get
+    container_name: get-tle-from-api
     networks:
-      - broker-kafka
+      - kafka-net
     volumes:
-      - ./logs:/app/logs
-      - ./configs:/app/configs
-      - ./tmp:/app/tmp
-      - /home/iambrosino/actualiza_tle/spacetrack-tle-publisher/test/password:/app/password
+      # - /home/jere/SIGAE/develop/modules/spacetrack-tle-producer/test/password:/app/password
+      - ./:/app
 networks:
-  broker-kafka:
+  kafka-net:
     external: true
