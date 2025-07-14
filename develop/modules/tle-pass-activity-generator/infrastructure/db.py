@@ -23,6 +23,15 @@ def get_db_connection(config):
         conn.close()
 
 def save_pass_activities(conn, pasadas: List[PassActivity]):
+
+     # Filtrar duplicados por (satellite_id, orbit_number)
+    seen = set()
+    unique_pasadas = []
+    for pasada in pasadas:
+        key = (pasada.satellite_id, pasada.orbit_number)
+        if key not in seen:
+            seen.add(key)
+            unique_pasadas.append(pasada)
     sql = """
     INSERT INTO activities
     (id, satellite_id, orbit_number, start_time, max_elevation_time, max_elevation, end_time, duration, status, priority, created_at, updated_at)
@@ -39,7 +48,7 @@ def save_pass_activities(conn, pasadas: List[PassActivity]):
         updated_at = EXCLUDED.updated_at
     """
     values = []
-    for pasada in pasadas:
+    for pasada in unique_pasadas:
         values.append((
             str(uuid.uuid4()),
             pasada.satellite_id,
