@@ -35,7 +35,7 @@ def handle_tle_message(conn, value: dict):
         return
     
     # Pasar el min_elevation para filtrar en el cálculo
-    pasadas = compute_passes(tle, start_time, end_time, min_elevation=satellite['min_elevation'])
+    pasadas = compute_passes(conn, tle, start_time, end_time, min_elevation=satellite['min_elevation'])
 
     valid_passes = []
     for pasada in pasadas:
@@ -47,14 +47,14 @@ def handle_tle_message(conn, value: dict):
 
         # descartar si no permite propagación en ese horario
         if not can_propagate_pass(pasada, satellite, gs_config):
-            logger.info(f"Pasada descartada por restricción horario: {pasada.to_dict()}")
+            logger.info(f"Pasada descartada por restricción horario: {json.dumps(pasada.to_dict(), default=str)}")
             continue
         valid_passes.append(pasada)
 
     save_pass_activities(conn, valid_passes)
 
 
-    for pasada in pasadas:
+    for pasada in valid_passes:
         logger.info(f"Pasada guardada: {json.dumps(pasada.to_dict(), default=str)}")
 
 

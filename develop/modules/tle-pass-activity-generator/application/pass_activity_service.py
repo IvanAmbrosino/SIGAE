@@ -4,12 +4,7 @@ from domain.tle_pass import TleData, PassActivity
 import re
 from typing import List
 from typing import List
-
-
-# Ejemplo de ubicación de estación
-STATION_LAT = -34.6  # Buenos Aires
-STATION_LON = -58.4
-STATION_ELEV = 25  # metros
+from infrastructure.db import get_station_coordinates
 
 
 def get_norad_id(line1: str) -> str:
@@ -22,10 +17,13 @@ def get_norad_id(line1: str) -> str:
 
 
 
-def compute_passes(tle: TleData, start_time, end_time, min_elevation: float = 0.0) -> List[PassActivity]:
+def compute_passes(conn, tle: TleData, start_time, end_time, min_elevation: float = 0.0) -> List[PassActivity]:
     ts = load.timescale()
     satellite = EarthSatellite(tle.line1, tle.line2, tle.satellite_id, ts)
-    station = wgs84.latlon(STATION_LAT, STATION_LON, STATION_ELEV)
+    
+    lat, lon, elev = get_station_coordinates(conn)
+    station = wgs84.latlon(lat, lon, elev)
+
     t0 = ts.utc(start_time)
     t1 = ts.utc(end_time)
 

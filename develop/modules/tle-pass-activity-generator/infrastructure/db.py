@@ -130,3 +130,20 @@ def get_satellite_by_id(conn, satellite_id: str):
         'min_elevation': float(row[8]) if row[8] is not None else None,
         'max_elevation': float(row[9]) if row[9] is not None else None,
     }
+
+
+def get_station_coordinates(conn, station_name: str = "Estación Córdoba"):
+    with conn.cursor() as cur:
+        cur.execute("""
+            SELECT latitude, longitude, altitude
+            FROM ground_stations
+            WHERE name = %s AND is_active = TRUE
+            LIMIT 1
+        """, (station_name,))
+        row = cur.fetchone()
+
+    if row:
+        lat, lon, alt = float(row[0]), float(row[1]), float(row[2])
+        return lat, lon, alt
+    else:
+        raise Exception("No se encontró la estación activa.")
