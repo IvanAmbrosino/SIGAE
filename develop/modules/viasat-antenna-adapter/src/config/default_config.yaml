@@ -1,11 +1,15 @@
 app:
   antenna_id: "ANTENA_DEFAULT" # Nombre de la unidad
-  broadcast_tle: false # Acepta todos los TLE
+  chequeo: false # Solo acepta TLEs de satelites planificados y solo acepta planificacion que tenga presente el TLE
   freshness_hours_tle: 48 # 48 hs para validar que un tle este actualizado o no (freshness)
   minutes_min_to_load: 5 # Tiempo en minutos minimo antes de ejecutarse una pasada para cargar una nueva tarea
+  message_types: # Seteo de los nombres para los Tipos de Mensajes
+    tle_type: "TLE"
+    plan_type: "PLANN"
+    plan_tle_type: "PLANTLE"
 send:
   connection_method: "direct" # / tunnel / double_tunnel
-  sleep_time: 60 # Espera por la respuesta de la antena
+  sleep_time: 10 # Espera por la respuesta de la antena
   server_config:
     host: "10.0.100.220"
     username: "soporte"

@@ -1,19 +1,56 @@
-2025-07-14 19:24:52,435 - 1 - Main -                        57 - INFO - Connected to Kafka successfully.
-2025-07-14 19:25:24,995 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '43641', 'satellite_name': 'SAOCOM 1A', 'line1': '1 27424U 02022A   25195.59461420  .00000577  00000-0  12652-3 0  9996', 'line2': '2 27424  98.3792 154.2929 0001113  53.9678   1.0769 14.61344720233952', 'timestamp': '2025-07-14T14:16:14Z'}
-2025-07-14 19:25:24,998 - 1 - Main -                        107 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
-2025-07-14 19:25:25,648 - 1 - Main -                        114 - ERROR - Error al enviar el archivo de TLE
-2025-07-14 19:26:42,728 - 1 - Main -                        57 - INFO - Connected to Kafka successfully.
-2025-07-14 19:27:23,791 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '43641', 'satellite_name': 'SAOCOM 1A', 'line1': '1 27424U 02022A   25195.59461420  .00000577  00000-0  12652-3 0  9996', 'line2': '2 27424  98.3792 154.2929 0001113  53.9678   1.0769 14.61344720233952', 'timestamp': '2025-07-14T14:16:14Z'}
-2025-07-14 19:27:23,792 - 1 - Main -                        107 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
-2025-07-14 19:27:23,794 - 1 - Main -                        64 - DEBUG - Listado de archivos locales: ['/app/tmp/tmp_file.txt', '/app/tmp/tmp_file.txt.done']
-2025-07-14 19:27:23,795 - 1 - Main -                        65 - DEBUG - Listado de archivos remotos: ['rciEphem_PLANNER_LOAD.txt', 'rciEphem_PLANNER_LOAD.txt.done']
-2025-07-14 19:27:24,441 - 1 - Main -                        116 - ERROR - Error al enviar el archivo de TLE
-2025-07-14 19:32:04,698 - 1 - Main -                        57 - INFO - Connected to Kafka successfully.
-2025-07-14 19:32:47,961 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '43641', 'satellite_name': 'SAOCOM 1A', 'line1': '1 27424U 02022A   25195.59461420  .00000577  00000-0  12652-3 0  9996', 'line2': '2 27424  98.3792 154.2929 0001113  53.9678   1.0769 14.61344720233952', 'timestamp': '2025-07-14T14:16:14Z'}
-2025-07-14 19:32:47,962 - 1 - Main -                        107 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
-2025-07-14 19:34:18,368 - 1 - Main -                        57 - INFO - Connected to Kafka successfully.
-2025-07-14 19:34:21,449 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '43641', 'satellite_name': 'SAOCOM 1A', 'line1': '1 27424U 02022A   25195.59461420  .00000577  00000-0  12652-3 0  9996', 'line2': '2 27424  98.3792 154.2929 0001113  53.9678   1.0769 14.61344720233952', 'timestamp': '2025-07-14T14:16:14Z'}
-2025-07-14 19:34:21,450 - 1 - Main -                        107 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
-2025-07-14 19:34:21,452 - 1 - Main -                        66 - DEBUG - Listado de archivos locales: ['/app/tmp/tmp_file.txt', '/app/tmp/tmp_file.txt.done']
-2025-07-14 19:34:21,452 - 1 - Main -                        67 - DEBUG - Listado de archivos remotos: ['/home/soporte/etc/remote/rciEphem_PLANNER_LOAD.txt', '/home/soporte/etc/remote/rciEphem_PLANNER_LOAD.txt.done']
-2025-07-14 19:34:22,098 - 1 - Main -                        126 - ERROR - Error al enviar el archivo de TLE
+2025-07-15 18:45:45,268 - 1 - Main -                        57 - INFO - Connected to Kafka successfully.
+2025-07-15 18:46:44,807 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '43641', 'satellite_name': 'SAOCOM 1B', 'line1': '1 43641U 18076A   25196.45855347 +.00000000 +00000+0 +14001-4 6 23502', 'line2': '2 43641  97.8887  23.0290 0001415  89.5774 257.9482 14.82161108366222', 'timestamp': '2025-07-14T14:16:14Z'}
+2025-07-15 18:46:44,808 - 1 - Main -                        125 - DEBUG - Procesando mensaje tipo TLE
+2025-07-15 18:46:44,809 - 1 - Main -                        85 - DEBUG - Se valida correctemente el formato del TLE y el CRC
+2025-07-15 18:46:44,810 - 1 - Main -                        109 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
+2025-07-15 18:46:44,814 - 1 - Main -                        67 - DEBUG - Listado de archivos locales: ['/app/tmp/tmp_file.txt', '/app/tmp/tmp_file.txt.done']
+2025-07-15 18:46:44,814 - 1 - Main -                        68 - DEBUG - Listado de archivos remotos: ['/home/soporte/etc/remote/rciEphem_PLANNER_LOAD.txt', '/home/soporte/etc/remote/rciEphem_PLANNER_LOAD.txt.done']
+2025-07-15 18:46:45,451 - 1 - Main -                        70 - DEBUG - Archivo enviado a la antena
+2025-07-15 18:46:45,451 - 1 - Main -                        71 - DEBUG - Sleep de 10 segundos
+2025-07-15 18:46:55,668 - 1 - Main -                        78 - DEBUG - Stdout: <Status>ACCEPTED</Status>
+2025-07-15 18:46:55,668 - 1 - Main -                        79 - INFO - TLE cargado y aceptado correctamente
+2025-07-15 18:46:55,674 - 1 - Main -                        32 - DEBUG - Mensaje procesado correctamente!!!
+2025-07-15 18:46:55,674 - 1 - Main -                        33 - DEBUG - Mensaje commiteado en kafka
+2025-07-15 18:46:55,680 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'PLANN', 'antenna_id': 'ANTENA_DEFAULT', 'timestamp': '2025-07-11T14:00:00Z', 'source': 'planificador_automatico', 'plan': [{'task_id': 'SAOCOM1B_ANTENA_6_2025_193_130001', 'action': 'ADD', 'antenna_id': 'VIASAT', 'satellite': 'SAOCOM-1B', 'norad_id': '43641', 'config_id': 10, 'start': '2025-07-16T14:16:00Z', 'end': '2025-07-16T14:17:00Z', 'prepass_seconds': 120, 'postpass_seconds': 60}]}
+2025-07-15 18:46:55,680 - 1 - Main -                        137 - DEBUG - Procesando mensaje tipo TLE
+2025-07-15 18:46:55,685 - 1 - Main -                        158 - INFO - Mensaje entrante para la antena: ANTENA_DEFAULT
+2025-07-15 18:46:55,685 - 1 - Main -                        244 - DEBUG - Contiene todos los campos necesarios
+2025-07-15 18:46:55,685 - 1 - Main -                        198 - DEBUG - Existe la tarea en la bd? -> False
+2025-07-15 18:46:55,686 - 1 - Main -                        212 - DEBUG - Comparacion de fechas: start_dt_task: 2025-07-16 14:16:00+00:00 > now: 2025-07-15 18:51:55.686038+00:00
+2025-07-15 18:46:55,690 - 1 - Main -                        89 - DEBUG - Listado de archivos locales: ['/app/tmp/tmp_file.xml', '/app/tmp/tmp_file.xml.done']
+2025-07-15 18:46:55,691 - 1 - Main -                        90 - DEBUG - Listado de archivos remotos: ['/home/soporte/etc/remote/rciSched_PLANNER_LOAD.txt', '/home/soporte/etc/remote/rciSched_PLANNER_LOAD.txt.done']
+2025-07-15 18:46:55,918 - 1 - Main -                        92 - DEBUG - Archivo enviado a la antena
+2025-07-15 18:46:55,918 - 1 - Main -                        93 - DEBUG - Sleep de 10 segundos
+2025-07-15 18:47:06,121 - 1 - Main -                        100 - DEBUG - Stdout: <Status>ACCEPTED</Status>
+2025-07-15 18:47:06,121 - 1 - Main -                        101 - INFO - TLE cargado y aceptado correctamente
+2025-07-15 18:47:06,127 - 1 - Main -                        32 - DEBUG - Mensaje procesado correctamente!!!
+2025-07-15 18:47:06,127 - 1 - Main -                        33 - DEBUG - Mensaje commiteado en kafka
+2025-07-15 18:50:54,835 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'TLE', 'norad_id': '27424', 'satellite_name': 'AQUA', 'line1': '1 27424U 02022A   25196.49513346  .00000619  00000-0  13513-3 0  9995', 'line2': '2 27424  98.3792 155.2050 0001077  54.3075  55.4292 14.61346150234126', 'timestamp': '2025-07-14T13:16:14Z'}
+2025-07-15 18:50:54,836 - 1 - Main -                        125 - DEBUG - Procesando mensaje tipo TLE
+2025-07-15 18:50:54,836 - 1 - Main -                        85 - DEBUG - Se valida correctemente el formato del TLE y el CRC
+2025-07-15 18:50:54,838 - 1 - Main -                        109 - DEBUG - Es el primer TLE que llega, aceptando y guardando en la BD
+2025-07-15 18:50:54,843 - 1 - Main -                        67 - DEBUG - Listado de archivos locales: ['/app/tmp/tmp_file.txt', '/app/tmp/tmp_file.txt.done']
+2025-07-15 18:50:54,843 - 1 - Main -                        68 - DEBUG - Listado de archivos remotos: ['/home/soporte/etc/remote/rciEphem_PLANNER_LOAD.txt', '/home/soporte/etc/remote/rciEphem_PLANNER_LOAD.txt.done']
+2025-07-15 18:50:55,485 - 1 - Main -                        70 - DEBUG - Archivo enviado a la antena
+2025-07-15 18:50:55,485 - 1 - Main -                        71 - DEBUG - Sleep de 10 segundos
+2025-07-15 18:51:05,679 - 1 - Main -                        78 - DEBUG - Stdout: <Status>ACCEPTED</Status>
+2025-07-15 18:51:05,679 - 1 - Main -                        79 - INFO - TLE cargado y aceptado correctamente
+2025-07-15 18:51:05,688 - 1 - Main -                        32 - DEBUG - Mensaje procesado correctamente!!!
+2025-07-15 18:51:05,688 - 1 - Main -                        33 - DEBUG - Mensaje commiteado en kafka
+2025-07-15 18:51:05,688 - 1 - Main -                        81 - DEBUG - NEW MESSAGE: {'message_type': 'PLANN', 'antenna_id': 'ANTENA_DEFAULT', 'timestamp': '2025-07-11T14:00:00Z', 'source': 'planificador_automatico', 'plan': [{'task_id': 'SAOCOM1B_ANTENA_6_2025_193_130002', 'action': 'ADD', 'antenna_id': 'VIASAT', 'satellite': 'SAOCOM-1B', 'norad_id': '43641', 'config_id': 10, 'start': '2025-07-16T15:16:00Z', 'end': '2025-07-16T15:17:00Z', 'prepass_seconds': 120, 'postpass_seconds': 60}, {'task_id': 'AQUA_ANTENA_6_2025_193_130003', 'action': 'ADD', 'antenna_id': 'VIASAT', 'satellite': 'AQUA', 'norad_id': '27424', 'config_id': 9, 'start': '2025-07-16T16:16:00Z', 'end': '2025-07-16T16:17:00Z', 'prepass_seconds': 120, 'postpass_seconds': 60}]}
+2025-07-15 18:51:05,688 - 1 - Main -                        137 - DEBUG - Procesando mensaje tipo TLE
+2025-07-15 18:51:05,692 - 1 - Main -                        158 - INFO - Mensaje entrante para la antena: ANTENA_DEFAULT
+2025-07-15 18:51:05,692 - 1 - Main -                        244 - DEBUG - Contiene todos los campos necesarios
+2025-07-15 18:51:05,693 - 1 - Main -                        198 - DEBUG - Existe la tarea en la bd? -> False
+2025-07-15 18:51:05,693 - 1 - Main -                        212 - DEBUG - Comparacion de fechas: start_dt_task: 2025-07-16 15:16:00+00:00 > now: 2025-07-15 18:56:05.693298+00:00
+2025-07-15 18:51:05,693 - 1 - Main -                        244 - DEBUG - Contiene todos los campos necesarios
+2025-07-15 18:51:05,693 - 1 - Main -                        198 - DEBUG - Existe la tarea en la bd? -> False
+2025-07-15 18:51:05,693 - 1 - Main -                        212 - DEBUG - Comparacion de fechas: start_dt_task: 2025-07-16 16:16:00+00:00 > now: 2025-07-15 18:56:05.693965+00:00
+2025-07-15 18:51:05,698 - 1 - Main -                        89 - DEBUG - Listado de archivos locales: ['/app/tmp/tmp_file.xml', '/app/tmp/tmp_file.xml.done']
+2025-07-15 18:51:05,698 - 1 - Main -                        90 - DEBUG - Listado de archivos remotos: ['/home/soporte/etc/remote/rciSched_PLANNER_LOAD.txt', '/home/soporte/etc/remote/rciSched_PLANNER_LOAD.txt.done']
+2025-07-15 18:51:05,894 - 1 - Main -                        92 - DEBUG - Archivo enviado a la antena
+2025-07-15 18:51:05,894 - 1 - Main -                        93 - DEBUG - Sleep de 10 segundos
+2025-07-15 18:51:16,106 - 1 - Main -                        100 - DEBUG - Stdout: <Status>ACCEPTED</Status>
+2025-07-15 18:51:16,106 - 1 - Main -                        101 - INFO - TLE cargado y aceptado correctamente
+2025-07-15 18:51:16,120 - 1 - Main -                        32 - DEBUG - Mensaje procesado correctamente!!!
+2025-07-15 18:51:16,120 - 1 - Main -                        33 - DEBUG - Mensaje commiteado en kafka

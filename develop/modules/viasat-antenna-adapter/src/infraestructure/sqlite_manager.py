@@ -1,6 +1,6 @@
 """SQLite Manager for cache and planning data."""
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # -----------------------------------------------
 # CONFIGURACIÓN
@@ -68,9 +68,9 @@ class SQLiteManager:
             pase["satellite"],
             pase["norad_id"],
             pase["config_id"],
-            pase["start_time"],
-            pase["end_time"],
-            datetime.utcnow().isoformat()
+            self.to_iso_z(pase["start"]),
+            self.to_iso_z(pase["end"]),
+            datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         ))
         conn.commit()
         conn.close()
@@ -82,10 +82,12 @@ class SQLiteManager:
         c.execute("""
             INSERT OR REPLACE INTO tles (
                 norad_id, name, line1, line2, timestamp, updated_at
-            ) VALUES (?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?)
         """, (
-            tle["norad_id"], tle["satellite_name"], tle["line1"], tle["line2"],
-            tle["timestamp"], datetime.utcnow().isoformat()
+            tle["norad_id"], tle["satellite_name"],
+            tle["line1"], tle["line2"],
+            self.to_iso_z(tle["timestamp"]),
+            datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         ))
         conn.commit()
         conn.close()
@@ -118,7 +120,9 @@ class SQLiteManager:
         """Obtains the TLE for a given NORAD ID, checking freshness."""
         conn = sqlite3.connect(TLE_DB)
         c = conn.cursor()
-        limit = (datetime.utcnow() - timedelta(hours=freshness_hours)).isoformat()
+        limit = (
+            datetime.utcnow() - timedelta(hours=freshness_hours)
+                 ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
         c.execute("""
             SELECT line1, line2 FROM tles
             WHERE norad_id = ? AND timestamp > ? 
@@ -158,16 +162,29 @@ class SQLiteManager:
         """Returns true if there are activities in a specified window"""
         conn = sqlite3.connect(PLANNING_DB)
         c = conn.cursor()
-        where_1 = f"start_time <= {init_time} and end_time > {init_time}" # Empieza antes y termina despues del init
-        where_2 = f"start_time < {end_time} and  end_time < {end_time}" # Empieza antes y termina despues del end
-        where_3 = f"start_time >= {init_time} and end_time <= {end_time}" # La actividad vieja se encuentra completamente adentro de la nueva
-        where_4 = f"start_time <= {init_time} and end_time >= {end_time}" # La actividad nueva esta adentro de otra actividad vieja
-        c.execute(f"SELECT norad_id FROM planificaciones WHERE {where_1} or {where_2} or {where_3} or {where_4}")
-        rows = c.fetchall()
+        # where_1 = f"start_time <= {init_time} and end_time > {init_time}" # Empieza antes y termina despues del init
+        # where_2 = f"start_time < {end_time} and  end_time < {end_time}"   # Empieza antes y termina despues del end
+        # where_3 = f"start_time >= {init_time} and end_time <= {end_time}" # La actividad vieja se encuentra completamente adentro de la nueva
+        # where_4 = f"start_time <= {init_time} and end_time >= {end_time}" # La actividad nueva esta adentro de otra actividad vieja
+
+        where = """
+        (start_time <= ? AND end_time > ?) OR
+        (start_time < ? AND end_time >= ?) OR
+        (start_time >= ? AND end_time <= ?) OR
+        (start_time <= ? AND end_time >= ?)
+    """
+
+        params = (
+            init_time, init_time,
+            end_time, end_time,
+            init_time, end_time,
+            init_time, end_time,
+        )
+
+        c.execute(f"SELECT norad_id FROM planificaciones WHERE {where}", params)
+        exists = c.fetchone() is not None
         conn.close()
-        if rows:
-            return True
-        return False
+        return exists
 
     def get_satellites_planificados(self) -> list:
         """
@@ -175,7 +192,7 @@ class SQLiteManager:
         Returns a list of satellites without repeating itself
         """
         list_satellites = []
-        now =  datetime.utcnow().isoformat()
+        now =  datetime.utcnow().isoformat().split('.')[0]+'Z'
         conn = sqlite3.connect(PLANNING_DB)
         c = conn.cursor()
         c.execute("SELECT norad_id FROM planificaciones  WHERE start_time > ?", (now,))
@@ -192,7 +209,7 @@ class SQLiteManager:
 
     def limpiar_tle(self, dias: int = 3) -> None:
         """Cleans up old TLE entries older than a specified number of days."""
-        limite = (datetime.utcnow() - timedelta(days=dias)).isoformat()
+        limite = (datetime.utcnow() - timedelta(days=dias)).isoformat().split('.')[0]+'Z'
         conn = sqlite3.connect(TLE_DB)
         c = conn.cursor()
         c.execute("DELETE FROM tles WHERE timestamp < ?", (limite,))
@@ -201,7 +218,7 @@ class SQLiteManager:
 
     def limpiar_planificaciones(self, dias: int = 1) -> None:
         """Cleans up old planning entries older than a specified number of days."""
-        limite = (datetime.utcnow() - timedelta(days=dias)).isoformat()
+        limite = (datetime.utcnow() - timedelta(days=dias)).isoformat().split('.')[0]+'Z'
         conn = sqlite3.connect(PLANNING_DB)
         c = conn.cursor()
         c.execute("DELETE FROM planificaciones WHERE end_time < ?", (limite,))
@@ -215,3 +232,12 @@ class SQLiteManager:
         """Initializes both databases if they do not exist."""
         self.init_planning_db()
         self.init_tle_db()
+
+    # -----------------------------------------------
+    # Funciones utiles
+    # -----------------------------------------------
+    def to_iso_z(self, s: str) -> str:
+        """Convierte fecha en texto o datetime a formato ISO con 'Z'"""
+        if isinstance(s, str):
+            s = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        return s.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

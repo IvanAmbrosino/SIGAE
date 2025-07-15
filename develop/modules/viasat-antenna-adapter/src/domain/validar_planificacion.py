@@ -2,7 +2,7 @@
 import re
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from infraestructure.sqlite_manager import SQLiteManager # pylint: disable=import-error
 from infraestructure.config_manager import ConfigManager # pylint: disable=import-error
@@ -32,8 +32,10 @@ class ValidateTLE(Validator):
         if chequeo:
             list_sat_planificados = self.get_satellites_planificados()
             if message["norad_id"] in list_sat_planificados:
+                self.logger.debug("Se verifica que el satelite se encuentra planificado para el TLE %s",message['satellite_name'])
                 if self.validate_tle_format(message):
                     if self.is_latest_tle(message):
+                        self.logger.debug("Mensaje correctemente validado")
                         return True
                     self.logger.debug("No hay cambios en el TLE.")
                 self.logger.error("TLE con formato incorrecto.")
@@ -80,6 +82,7 @@ class ValidateTLE(Validator):
         try:
             if len(tle['line1']) == 69 and len(tle['line2']) == 69:
                 if self.validate_tle_checksum(tle['line1']) and self.validate_tle_checksum(tle['line2']):
+                    self.logger.debug("Se valida correctemente el formato del TLE y el CRC")
                     return True
         except KeyError as e:
             self.logger.error("Error al validar, el json es incorrecto: %s",e)
@@ -102,15 +105,15 @@ class ValidateTLE(Validator):
     def is_latest_tle(self, tle : dict) -> bool:
         """Verifica que el TLE sea el ultimo comparando el contenido y las fechas de epoch"""
         last_tle_in_db = self.sqlite_manager.get_last_tle(tle['norad_id'])
-        
         if not last_tle_in_db:
             self.logger.debug("Es el primer TLE que llega, aceptando y guardando en la BD")
             return True
-        if (last_tle_in_db[1].strip() != tle['line1'] or last_tle_in_db[2].strip() != tle['line2']):
-            old_tle_date = self.tle_epoch_to_datetime(last_tle_in_db[1].strip().split()[3])
+        if (last_tle_in_db[0].strip() != tle['line1'] or last_tle_in_db[1].strip() != tle['line2']):
+            old_tle_date = self.tle_epoch_to_datetime(last_tle_in_db[0].strip().split()[3])
             new_tle_date = self.tle_epoch_to_datetime(tle['line1'].split()[3])
             if new_tle_date > old_tle_date:
-                self.logger.debug("[OLD TLE]: %s\n%s \n%s ", last_tle_in_db[0], last_tle_in_db[1] ,last_tle_in_db[2])
+                self.logger.debug("Se valida que es un nuevo TLE")
+                self.logger.debug("[OLD TLE]: %s\n%s \n%s ", tle['satellite_name'], last_tle_in_db[0], last_tle_in_db[1])
                 self.logger.debug("[NEW TLE]: %s\n%s \n%s ", tle['satellite_name'], tle['line1'], tle['line2'])
                 self.sqlite_manager.upsert_tle(tle=tle)
                 return True
@@ -147,40 +150,57 @@ class ValidatePlann(Validator):
             - Que no tenga las fechas en el formato requerido
             - Que no posea un TLE actualizado
         """
-        if message['antena'] == self.configs['antenna_id']:
-            self.logger.info("Mensaje entrante para la antena: %s", message['antena'])
-            for task in message['plan']:
-                if not self.validate_task(task):
-                    return False
-                if not self.unique_task_id(task['task_id']):
-                    return False
-                try:
-                    task['start'] = self.validate_isoformat(task['start'])
-                    task['end'] = self.validate_isoformat(task['end'])
-                except ValueError as e:
-                    self.logger.error("Error formateanfo fecha: %s",e)
-                    return False
-                if not self.validate_start_time(task['start']):
-                    return False
-                if not self.has_conflict(task):
-                    return False
-                if chequeo:
-                    if not self.validate_freshness_tle(task['norad_id']):
-                        return False
-            return True
-        self.logger.debug("Mensaje Rechazado: %s", message)
-        return False
+        antenna_id = self.configs['app']['antenna_id']
+        if message.get('antenna_id') != antenna_id:
+            self.logger.debug("Mensaje rechazado para antena distinta: %s", message.get('antenna_id'))
+            return False
+
+        self.logger.info("Mensaje entrante para la antena: %s", message['antenna_id'])
+        for task in message.get('plan', []):
+
+            if not self.validate_task(task):
+                self.logger.warning("Tarea inválida: el mensaje no contiene los campos requeridos por la accion -> %s", task)
+                return False
+
+            if self.unique_task_id(task['task_id']):
+                self.logger.warning("ID de tarea no única: %s", task['task_id'])
+                return False
+
+            try:
+                task['start'] = self.validate_isoformat(task['start'])
+                task['end'] = self.validate_isoformat(task['end'])
+            except ValueError as e:
+                self.logger.error("Error formateanfo fecha: %s",e)
+                return False
+
+            if not self.validate_start_time(task['start']):
+                self.logger.warning("Hora de inicio inválida: %s", task['start'])
+                return False
+
+            if self.has_conflict(task):
+                self.logger.warning("Conflicto detectado con tarea: %s. Existen actividades planificadas en esa ventana", task['task_id'])
+                return False
+
+            if chequeo and not self.validate_freshness_tle(task['norad_id']):
+                self.logger.warning("TLE desactualizado para NORAD ID: %s", task['norad_id'])
+                return False
+
+        return True
 
 
     def unique_task_id(self, task_id: str) -> bool:
-        """Consulta en la BD si existe alguna plann con ese id"""
-        if self.sqlite_manager.pase_ya_programado(task_id):
-            return True
-        return False
+        """
+        Consulta en la BD si existe alguna plann con ese id
+            - devuelve True si existe una con ese ID
+            - devuelve False si no existe una task con ese ID
+        """
+        exists = self.sqlite_manager.pase_ya_programado(task_id)
+        self.logger.debug("Existe la tarea en la bd? -> %s",exists)
+        return exists
 
     def validate_freshness_tle(self, norad_id):
         """Consulta en la bd si existe un TLE para la pasada"""
-        tles = self.sqlite_manager.get_freshness_tle(norad_id, freshness_hours=self.configs['freshness_hours_tle'])
+        tles = self.sqlite_manager.get_freshness_tle(norad_id, freshness_hours=self.configs['app']['freshness_hours_tle'])
         if tles:
             return True
         self.logger.error("No se encuentran TLEs Frescos: %s",tles)
@@ -189,7 +209,9 @@ class ValidatePlann(Validator):
 
     def validate_start_time(self, start_dt: datetime) -> bool:
         """Valida que el tiempo de inicio sea al menos 5 minutos en el futuro."""
-        return start_dt > datetime.utcnow().isoformat() + timedelta(minutes=self.configs['app']['minutes_min_to_load'])
+        self.logger.debug("Comparacion de fechas: start_dt_task: %s > now: %s",
+                          start_dt ,datetime.now(timezone.utc) + timedelta(minutes=self.configs['app']['minutes_min_to_load']))
+        return start_dt > datetime.now(timezone.utc) + timedelta(minutes=self.configs['app']['minutes_min_to_load'])
 
     def has_conflict(self,task: dict) -> bool:
         """Verifica si hay conflictos de actividades en la ventana de tiempo especificada."""
@@ -205,9 +227,9 @@ class ValidatePlann(Validator):
 
     def validate_task(self, task: dict):
         """Valida que los campos requeridos estén según la acción"""
-        action = task.get("action")
+        action = task['action']
         if action == "ADD":
-            required = ["task_id", "satellite", "config_id", "antenna_id", "start", "end"]
+            required = ["task_id", "satellite", "antenna_id", "config_id", "norad_id", "start", "end", "prepass_seconds", "postpass_seconds"]
         elif action == "CANCEL":
             required = ["task_id"]
         elif action == "PURGE":
@@ -217,7 +239,10 @@ class ValidatePlann(Validator):
 
         for field in required:
             if field not in task:
-                raise ValueError(f"Campo requerido '{field}' faltante en tarea con acción {action}")
+                self.logger.warning("Campo requerido '%s' faltante en tarea con acción %s",field,action)
+                return False
+        self.logger.debug("Contiene todos los campos necesarios")
+        return True
 
     def format_vfi_time(self, dt: datetime) -> str:
         """Validar el formato de fecha"""

@@ -8,6 +8,7 @@ from domain.make_file import MakeTLEFile, MakePlannFile # pylint: disable=import
 from infraestructure.config_manager import ConfigManager # pylint: disable=import-error
 from infraestructure.antenna_connections import SFTPTunnel, SFTPDirect, SFTPDobleTunnel # pylint: disable=import-error
 from infraestructure.sqlite_manager import SQLiteManager # pylint: disable=import-error
+from domain.transforms import TransformTle # pylint: disable=import-error
 
 
 class MessageManager:
@@ -71,7 +72,7 @@ class MessageManager:
             sleep(self.send_config['sleep_time'])
             if self.sender.get_file(f"{ self.server_config['destination_path']}/{self.files_config['tle_status_filename']}",
                                     '/app/tmp/validate_tle.txt'):
-                result = subprocess.run(["grep",self.files_config["accept_string"],'/app/tmp/validate.txt'],
+                result = subprocess.run(["grep",self.files_config["accept_string"],'/app/tmp/validate_tle.txt'],
                                         check=True, stdout=subprocess.PIPE
                                         ).stdout.decode().strip()
                 self.logger.debug("Stdout: %s",result)
@@ -92,8 +93,8 @@ class MessageManager:
             self.logger.debug("Sleep de %s segundos",self.send_config['sleep_time'])
             sleep(self.send_config['sleep_time'])
             if self.sender.get_file(f"{ self.server_config['destination_path']}/{self.files_config['planning_status_filename']}",
-                                    '/app/tmp/validate_tle.txt'):
-                result = subprocess.run(["grep",self.files_config["accept_string"],'/app/tmp/validate.txt'],
+                                    '/app/tmp/validate_plan.txt'):
+                result = subprocess.run(["grep",self.files_config["accept_string"],'/app/tmp/validate_plan.txt'],
                                         check=True, stdout=subprocess.PIPE
                                         ).stdout.decode().strip()
                 self.logger.debug("Stdout: %s",result)
@@ -101,6 +102,10 @@ class MessageManager:
                 return True
             self.logger.error("No se pudo obtener el mensaje de status proveniente de la antena")
         return False
+
+    def save_tle_in_db(self, message: dict) -> None:
+        """Funcion que guarda el nuevo TLE en la BD cache"""
+        self.sqlite_manager.upsert_tle(message)
 
     def save_plann_in_db(self, message: dict) -> None:
         """Funcion que guarda o modifica todas las pasadas en el cache"""
@@ -116,16 +121,20 @@ class MessageManager:
 
     def process_message(self, msg: dict) -> bool:
         """Procesa los mensajes recibidos de Kafka y determina su tipo para poder ser procesado."""
-        if msg["message_type"] == "TLE":
-            if ValidateTLE(self.logger).validate(msg,chequeo= self.app_config['broadcast_tle']): # Valida si necesito el TLE y sus valores
+        if msg["message_type"] == self.app_config['message_types']['tle_type']:
+            self.logger.debug("Procesando mensaje tipo %s",self.app_config['message_types']['tle_type'])
+            msg = TransformTle(self.logger).transform(msg)                        # Realizamos las transformaciones necesarias
+            if ValidateTLE(self.logger).validate(msg,chequeo= self.app_config['chequeo']): # Valida si necesito el TLE y sus valores
                 mtf = MakeTLEFile()                                               # Inicializo la clase para crear el archivo TLE
                 mtf.make_file_to_send(msg)                                        # Armo el archivo a enviar a la antena
                 if self.send_tle_file():                                          # Envio el archivo a la antena
+                    self.save_tle_in_db(msg)                                      # Guarda el TLE en la BD
                     mtf.remove_tmp_files()                                        # Limpio el directorio /tmp
                     return True                                                   # Aviso de llegada correcta del TLE a la antena  -> Commit en Kafka
                 self.logger.error("Error al enviar el archivo de TLE")
             return False
-        elif msg["message_type"] == "PLANN":
+        elif msg["message_type"] == self.app_config['message_types']['plan_type']:
+            self.logger.debug("Procesando mensaje tipo %s",self.app_config['message_types']['tle_type'])
             if ValidatePlann(self.logger).validate(msg): # Valida la planificacion
                 mpf = MakePlannFile()           # Inicializo la clase para crear el archivo TLE
                 mpf.make_file_to_send(msg)      # Armo el archivo a enviar a la antena
@@ -135,14 +144,16 @@ class MessageManager:
                     return True                 # Aviso de llegada correcta de la Planificacion a la antena -> Commit en Kafka
                 self.logger.error("Error al enviar el archivo de Planificación")
             return False
-        elif msg["message_type"] == "PLANNTLE":
+        elif msg["message_type"] == self.app_config['message_types']['plan_tle_type']:
+            self.logger.debug("Procesando mensaje tipo %s",self.app_config['message_types']['tle_type'])
             if ValidateTLE(self.logger).validate(msg, chequeo= False):         # Valida el TLE. sin el chequeo de que tiene planificacion
                 if ValidatePlann(self.logger).validate(msg, chequeo= False):   # Valida la planificacion, sin el chequeo de que tiene tle
                     mtf = MakeTLEFile()
-                    mtf.make_file_to_send(msg)                      # Primero armo y envio el TLE
+                    mtf.make_file_to_send(msg['plan'])                      # Primero armo y envio el TLE
                     if self.send_tle_file():
                         mtf.remove_tmp_files()
                     mpf = MakePlannFile()
-                    mpf.make_file_to_send(msg)                      # Segundo armo y envio la Planificacion
+                    mpf.make_file_to_send(msg['tles'])                      # Segundo armo y envio la Planificacion
                     if self.send_plann_file():
                         mpf.remove_tmp_files()
+        return False

@@ -1,6 +1,7 @@
 """Creating TLE or Plann files to send to the antenna"""
 import subprocess
 import os
+from datetime import datetime
 from abc import ABC, abstractmethod
 from lxml import etree
 
@@ -81,47 +82,59 @@ class MakePlannFile(MakeFile):
     def __init__(self):
         self.tmp_path = '/app/tmp/tmp_file.xml'
 
-    def build_schedule_xml(self, tasks):
-        """Builds an XML document for the remote schedule based on the provided tasks."""
-        nsmap = {
-            None: "$VFIROOT/etc/schedule.xsd",
-            'xsi': "http://www.w3.org/2001/XMLSchema-instance"
-        }
-        root = etree.Element("RemoteSchedule", nsmap=nsmap)
-        root.set("{http://www.w3.org/2001/XMLSchema-instance}schemaLocation",
-                "$VFIROOT/etc/schedule.xsd")
+    def build_schedule_xml(self, tasks: list[dict]):
+        """Buil the XML file with tasks"""
+        xsi_ns = "http://www.w3.org/2001/XMLSchema-instance"
+        nsmap = {"xsi": xsi_ns}
+
+        root = etree.Element("Schedule", nsmap=nsmap)
+        root.set(f"{{{xsi_ns}}}schemaLocation", "./schedule.xsd schedule.xsd")
 
         for task in tasks:
-            task_node = etree.SubElement(root, "Task")
-            etree.SubElement(task_node, "Action").text = task["action"]
+            task_elem = etree.SubElement(root, "Task")
+            task_elem.set(f"{{{xsi_ns}}}schemaLocation", "./schedule.xsd schedule.xsd")
 
-            if "task_id" in task:
-                etree.SubElement(task_node, "TaskID").text = task["task_id"]
+            etree.SubElement(task_elem, "TaskID").text = task["task_id"]
+            etree.SubElement(task_elem, "Action").text = task["action"]
 
             if task["action"] == "ADD":
-                track = etree.SubElement(task_node, "Track")
+                track = etree.SubElement(task_elem, "Track")
+                track.set(f"{{{xsi_ns}}}schemaLocation", "./schedule.xsd schedule.xsd")
+
                 etree.SubElement(track, "Satellite").text = task["satellite"]
+                etree.SubElement(track, "StartTime").text = self.to_julian_time_string(task["start"])
+                etree.SubElement(track, "EndTime").text = self.to_julian_time_string(task["end"])
                 etree.SubElement(track, "ConfigID").text = str(task["config_id"])
                 etree.SubElement(track, "AntennaID").text = task["antenna_id"]
-                etree.SubElement(track, "StartTime").text = task["start"]
-                etree.SubElement(track, "EndTime").text = task["end"]
-                if "prepass" in task:
-                    prepass = etree.SubElement(track, "PrePass")
-                    start_offset = etree.SubElement(prepass, "StartOffsetTime")
-                    start_offset.text = str(task.get("prepass", str(task["postpass"])))
-                if "postpass" in task:
-                    postpass = etree.SubElement(track, "PostPass")
-                    etree.SubElement(postpass, "Enabled").text = "Yes"
-                    etree.SubElement(postpass, "Duration").text = str(task["postpass"])
 
-        return etree.tostring(root, pretty_print=True, xml_declaration=True, encoding="UTF-8")
+                # PreTest
+                pretest = etree.SubElement(track, "PreTest")
+                pretest.set(f"{{{xsi_ns}}}schemaLocation", "./schedule.xsd schedule.xsd")
+                etree.SubElement(pretest, "Enabled").text = "No"
+                etree.SubElement(pretest, "StartOffsetTime").text = "300"  # o lo que corresponda
+
+                # PrePass
+                prepass = etree.SubElement(track, "PrePass")
+                prepass.set(f"{{{xsi_ns}}}schemaLocation", "./schedule.xsd schedule.xsd")
+                etree.SubElement(prepass, "Enabled").text = "Yes"
+                etree.SubElement(prepass, "StartOffsetTime").text = str(task.get("prepass_seconds", 120))
+
+                # PostPass
+                postpass = etree.SubElement(track, "PostPass")
+                postpass.set(f"{{{xsi_ns}}}schemaLocation", "./schedule.xsd schedule.xsd")
+                etree.SubElement(postpass, "Enabled").text = "Yes"
+                etree.SubElement(postpass, "Duration").text = str(task.get("postpass_seconds", 60))
+
+        # Armado final con encabezado
+        body = etree.tostring(root, pretty_print=True, encoding="unicode")
+        return '<?xml version="1.0" encoding="utf-8"?>\n' + body
 
     def make_file_to_send(self, content: list[dict]) -> bool:
         """
         Creates the Planning file to be sent to the antennas.
         Receives a list of Tasks and make the file.
         """
-        xml_content = self.build_schedule_xml(content)
+        xml_content = self.build_schedule_xml(content['plan'])
         with open(self.tmp_path, "w", encoding='utf-8') as tle_file:
             tle_file.write(xml_content)
         subprocess.run(["unix2dos", self.tmp_path], check=True) # Se convierte en formato DOS
@@ -131,6 +144,10 @@ class MakePlannFile(MakeFile):
             pass
 
         return True
+
+    def to_julian_time_string(self, dt: datetime) -> str:
+        """Convierte datetime a formato 'YYYY DDD HH:MM:SS' (juliano + hora UTC)"""
+        return dt.strftime("%Y %j %H:%M:%S")
 
     def remove_tmp_files(self, path: str = '/app/tmp/') -> bool:
         """Remove all tmp files"""

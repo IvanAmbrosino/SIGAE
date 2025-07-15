@@ -86,6 +86,7 @@ class SFTPDirect(Connection):
         try:
             for src, dst in zip(paths_to_file, destination_paths):
                 self.sftp_client.put(src, dst)
+            sended = True
         except Exception as e: # pylint: disable=broad-exception-caught
             self.logger.error("[SEND ARCHIVE] Error en la conexion SSH: %s",e)
         finally:

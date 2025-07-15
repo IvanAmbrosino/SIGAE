@@ -28,8 +28,15 @@ class AntenaAdapter:
         SQLiteManager().inicializar() # Inicianlizacion de la base de datos (en caso que no exista)
 
         for message, message_value in self.kafka_adapter.get_message():
-            self.process_message.process_message(message_value)
-            self.kafka_adapter.commmit_message(message)
+            try:
+                if self.process_message.process_message(message_value):
+                    logger.debug("Mensaje procesado correctamente!!!")
+                else:
+                    logger.error("Mensaje no procesado correctamente: process_message returns False")
+                logger.debug("Mensaje commiteado en kafka")
+                self.kafka_adapter.commmit_message(message)
+            except Exception as e: # pylint: disable=broad-exception-caught
+                logger.error("Fatal error en el proceso principal: %s",e)
 
     def load_logger(self) -> None:
         """Load logger configuration."""
