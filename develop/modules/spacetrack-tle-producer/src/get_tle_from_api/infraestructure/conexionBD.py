@@ -11,9 +11,8 @@ def obtener_listado_satelites() -> list[dict]:
         db_config = config["database"]
         conn = psycopg2.connect(**db_config)
         with conn.cursor() as cur:
-            cur.execute("SELECT norad_id FROM satellites WHERE get_from_api = TRUE;")
+            cur.execute("SELECT id FROM satellites WHERE can_fetch_from_api = TRUE;")
             columns = [desc[0] for desc in cur.description]
-            print(columns)
             results = [dict(zip(columns, row)) for row in cur.fetchall()]
         conn.close()
         print("Resultados de BD:", results)

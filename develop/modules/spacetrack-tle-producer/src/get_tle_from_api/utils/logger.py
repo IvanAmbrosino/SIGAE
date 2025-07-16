@@ -30,3 +30,4 @@ def load_logger(self) -> None:
                 logger.addHandler(handler)
         except TypeError as e:
             logger.error("error en la generacion de logs: %s",e)
+        

@@ -50,6 +50,18 @@ CREATE TABLE ground_stations (
     is_active BOOLEAN DEFAULT TRUE
 );
 
+CREATE TABLE ground_station_configurations (
+    id VARCHAR(36) PRIMARY KEY,
+    ground_station_id VARCHAR(36) REFERENCES ground_stations(id) ON DELETE CASCADE,
+    default_propagation_hours INTEGER DEFAULT 24,
+    night_start_hour INTEGER CHECK (night_start_hour >= 0 AND night_start_hour < 24),
+    night_end_hour INTEGER CHECK (night_end_hour >= 0 AND night_end_hour < 24),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
 -- Tabla de antenas
 CREATE TABLE antennas (
     id VARCHAR(36) PRIMARY KEY,
@@ -77,27 +89,25 @@ CREATE TABLE antenna_capabilities (
 
 -- Tabla de satélites
 CREATE TABLE satellites (
-    id VARCHAR(36) PRIMARY KEY,
+    id VARCHAR(20) PRIMARY KEY,  -- NORAD ID suele ser un número no muy largo, ajustar tamaño si querés
     name VARCHAR(255) NOT NULL,
-    norad_id VARCHAR(255) UNIQUE,
     priority_level VARCHAR(10) CHECK (priority_level IN ('critical', 'high', 'medium', 'low')),
     description TEXT,
-    is_active BOOLEAN DEFAULT TRUE,
-    get_from_api BOOLEAN DEFAULT TRUE,
+
+    -- Eliminación lógica
+    is_active BOOLEAN DEFAULT TRUE,  -- Usado como soft delete
+    -- Propagación y visibilidad
+    can_propagate BOOLEAN DEFAULT TRUE,
+    allow_daytime_propagation BOOLEAN DEFAULT TRUE,
+    allow_nighttime_propagation BOOLEAN DEFAULT TRUE,
+    min_elevation DECIMAL(5, 2),
+    max_elevation DECIMAL(5, 2),
+    
+    -- Nuevo campo: indica si se puede obtener info desde una API externa
+    can_fetch_from_api BOOLEAN DEFAULT FALSE,
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tabla de requisitos de satélite
-CREATE TABLE satellite_requirements (
-    id VARCHAR(36) PRIMARY KEY,
-    satellite_id VARCHAR(36) REFERENCES satellites(id) ON DELETE CASCADE,
-    frequency_band VARCHAR(10) CHECK (frequency_band IN ('S', 'X', 'Ku', 'Ka', 'other')),
-    min_frequency DECIMAL(10, 2),
-    max_frequency DECIMAL(10, 2),
-    polarization VARCHAR(10) CHECK (polarization IN ('linear', 'circular', 'dual')),
-    min_elevation DECIMAL(5, 2),
-    min_duration INTEGER
 );
 
 -- Tabla de compatibilidad satélite-antena
@@ -126,12 +136,14 @@ CREATE TABLE activities (
     orbit_number VARCHAR(255),
     start_time TIMESTAMP NOT NULL,
     max_elevation_time TIMESTAMP,
+    max_elevation DECIMAL(5, 2),
     end_time TIMESTAMP NOT NULL,
     duration INTEGER NOT NULL,
     status VARCHAR(20) CHECK (status IN ('new', 'assigned', 'unassigned', 'pending', 'authorized', 'planned', 'modified', 'updated', 'critical')),
     priority VARCHAR(10) CHECK (priority IN ('critical', 'high', 'medium', 'low')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (satellite_id, orbit_number)
 );
 
 -- Tabla de asignaciones de actividad
@@ -239,3 +251,23 @@ FOR EACH ROW EXECUTE FUNCTION update_timestamp();
 CREATE TRIGGER update_system_configurations_timestamp
 BEFORE UPDATE ON system_configurations
 FOR EACH ROW EXECUTE FUNCTION update_timestamp();
+
+-- Insertar satélites de prueba
+INSERT INTO satellites
+(id, name, priority_level, description, is_active, can_propagate, allow_daytime_propagation, allow_nighttime_propagation, min_elevation, max_elevation, can_fetch_from_api, created_at, updated_at)
+VALUES
+('25544', 'ISS', 'high', 'Estación Espacial Internacional', TRUE, TRUE, TRUE, TRUE, 10.0, 90.0, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('27424', 'AQUA', 'medium', 'Satélite de observación de la NASA', TRUE, TRUE, FALSE, TRUE, 15.0, 85.0, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('39084', 'LANDSAT-8', 'critical', 'Satélite de observación terrestre', TRUE, TRUE, TRUE, FALSE, 20.0, 88.0, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Insertar estación terrestre por defecto: Córdoba, Córdoba
+INSERT INTO ground_stations
+(id, name, location, latitude, longitude, altitude, description, is_active)
+VALUES
+('station-cba-001', 'Estación Córdoba', 'Córdoba, Córdoba, Argentina', -31.4201, -64.1888, 360.0, 'Estación principal ubicada en Córdoba, Argentina.', TRUE);
+
+-- Insertar configuración por defecto para la estación Córdoba
+INSERT INTO ground_station_configurations
+(id, ground_station_id, default_propagation_hours, night_start_hour, night_end_hour, created_at, updated_at)
+VALUES
+('config-cba-001', 'station-cba-001', 72, 20, 6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); 

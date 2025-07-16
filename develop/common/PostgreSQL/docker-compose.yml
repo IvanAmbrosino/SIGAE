@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: planificador_app
       POSTGRES_PASSWORD: SecurePassword123!
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
       - ./deepseek_sql_.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
@@ -21,7 +21,9 @@ services:
     ## lo puse en la misma red que el kafka para poder acceder desde el consumer
     networks:
       - kafka-net
-
+volumes:
+  pgdata: 
+  
 networks:
   kafka-net:
     external: true
