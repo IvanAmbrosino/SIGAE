@@ -1,0 +1,16 @@
+
+services:
+  sender-module:
+    image: sender-module
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sender-module
+    hostname: sender-module
+    networks:
+      - kafka-net
+    volumes:
+      - ./:/app
+networks:
+  kafka-net:
+    external: true

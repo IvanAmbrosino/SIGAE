@@ -1,49 +1,36 @@
 app:
-  antenna_id: "ANTENA_DEFAULT" # Nombre de la unidad
-  chequeo: false # Solo acepta TLEs de satelites planificados y solo acepta planificacion que tenga presente el TLE
-  freshness_hours_tle: 48 # 48 hs para validar que un tle este actualizado o no (freshness)
-  minutes_min_to_load: 5 # Tiempo en minutos minimo antes de ejecutarse una pasada para cargar una nueva tarea
+  ack_check: true
+  message_ack_timeout: 30 # Tiempo maximo de espera del mensaje ACK
   message_types: # Seteo de los nombres para los Tipos de Mensajes
-    tle_type: "TLE"
+    tle_type: "NEWPLANN"
     plan_type: "PLANN"
     plan_tle_type: "PLANTLE"
-send:
-  connection_method: "direct" # / tunnel / double_tunnel
-  sleep_time: 10 # Espera por la respuesta de la antena
-  server_config:
-    host: "10.0.100.220"
-    username: "soporte"
-    password: "/app/password/soporte_passwd"
-    destination_path: "/home/soporte/etc/remote"
-  jump_server:
-    host: "10.0.100.220"
-    username: "soporte"
-    password: "/app/password/soporte_passwd"
-  second_jump_server:
-    host: "10.0.100.220"
-    username: "soporte"
-    password: "/app/password/soporte_passwd"
 kafka:
   bootstrap_servers: "kafka-broker-1:9092,kafka-broker-2:9092,kafka-broker-3:9092"
   schema_registry_url: "http://schema-registry:8081"
-  group_id: "tle-consumer"
+  group_id: "sender-module"
   auto_offset_reset: "earliest" # / latest -> Si se quieren consultar todos o solamente los nuevos mensajes entrantes
   enable_auto_commit: false # Se realiza el commit manualmente al finalizar de procesar el mensaje
-  topic: ["TLE","PLANN"]
+  topic:
+    sender_topic: "PLANN"
+    ack_topic: "ACK"
+    event_topic: "EVENTS"
+  schema:
+    sender_plann: "/app/config/schema_plann.json"
+    sender_plann_tle: "/app/config/schema_plann_tle.json"
   waiting_time: 30
   max_retries: 5
+database:
+  dbname: "satellite_db"
+  user: "postgres"
+  password: "/pat/to/passwd"
+  host: "localhost"
 logs:
   folder: "logs"
   filename: "PostTLE.log"
   rotation: 5,
   size: 5000000
-  log_level: "DEBUG" # / DEBUG
-files:
-  tle_load_filename: "rciEphem_PLANNER_LOAD.txt"
-  tle_status_filename: "importEphem_PLANNER_LOAD.txt"
-  planning_load_filename: "rciSched_PLANNER_LOAD.txt"
-  planning_status_filename: "importSched_PLANNER_LOAD.txt"
-  accept_string: "ACCEPTED"
+  log_level: "debug" # / info
 mail:
   notifications: true
   mailserver: "200.16.81.74"
