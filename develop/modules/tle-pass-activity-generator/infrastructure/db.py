@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import execute_values
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid 
 from typing import List
 
@@ -60,8 +60,8 @@ def save_pass_activities(conn, pasadas: List[PassActivity]):
             pasada.duration,
             pasada.status.value,
             pasada.priority.value,
-            datetime.now(),
-            datetime.now()
+            datetime.now(timezone.utc),
+            datetime.now(timezone.utc)
         ))
     with conn.cursor() as cur:
         execute_values(cur, sql, values, template=None, page_size=100)
