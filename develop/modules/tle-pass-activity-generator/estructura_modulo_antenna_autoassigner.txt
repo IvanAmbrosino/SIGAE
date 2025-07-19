@@ -1,0 +1,50 @@
+Estructura de carpetas para el módulo `antenna-autoassigner` (US17)
+==================================================================
+
+📁 antenna-autoassigner/
+│
+├── application/
+│   └── orchestrator.py
+│       - Contiene la clase principal que orquesta el flujo del caso de uso.
+│       - Se encarga de coordinar las llamadas a los puertos (repositorios).
+│
+├── domain/
+│   ├── entities/
+│   │   └── antenna.py
+│   │       - Define las clases del dominio como Antenna, Task, etc.
+│   │       - Representan conceptos del negocio sin lógica técnica.
+│   └── ports/
+│       ├── antenna_repository.py
+│       └── task_repository.py
+│           - Interfaces que definen métodos para acceder a datos de antenas y tareas.
+│           - No tienen implementación, solo definen qué se necesita.
+│
+├── infrastructure/
+│   ├── repositories/
+│   │   ├── antenna_repository_postgres.py
+│   │   └── task_repository_postgres.py
+│   │       - Implementaciones concretas de los ports usando PostgreSQL.
+│   └── db.py
+│       - Maneja la conexión a la base de datos y helpers asociados.
+│
+│
+├── main.py
+│   - Punto de entrada principal.
+│   - Instancia las dependencias (repositorios, orquestador, etc.) y ejecuta la lógica.
+│
+├── requirements.txt
+│   - Lista de dependencias de Python.
+│
+├── Dockerfile
+│   - Instrucciones para construir la imagen del contenedor.
+│
+└── docker-compose.yml
+    - Define los servicios para levantar el entorno completo con dependencias (DB, Kafka, etc.).
+
+Resumen:
+--------
+- `domain` define el modelo de negocio y sus contratos (interfaces).
+- `application` usa esas interfaces para ejecutar lógica de alto nivel.
+- `infrastructure` implementa lo técnico (bases de datos, Kafka, etc.).
+- `interfaces` recibe mensajes/eventos y se conecta con `application`.
+- `main.py` une todo y arranca el módulo.

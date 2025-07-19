@@ -1,0 +1,5 @@
+confluent-kafka[avro]
+skyfield
+numpy
+psycopg2-binary
+PyYAML

@@ -1,24 +1,14 @@
 
-import yaml
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 from confluent_kafka.serialization import StringDeserializer
 from confluent_kafka import DeserializingConsumer
 
-from infrastructure.db import get_db_connection
-from application.orchestrator import handle_tle_message
 from infrastructure.logger import setup_logger
+from application.orchestrator import Orchestrator
 
 
-def load_config():
-    with open('configs/config.yaml', 'r') as f:
-        return yaml.safe_load(f)
-
-def consume_tle_messages():
-    config = load_config()
-    logger = setup_logger(__name__)
-
-    db_config = config['database']
+def consume_tle_messages(config, orchestrator: Orchestrator):
     kafka_conf = config['kafka']
     schema_conf = config['schema_registry']
 
@@ -33,32 +23,29 @@ def consume_tle_messages():
         'key.deserializer': StringDeserializer('utf_8'),
         'value.deserializer': avro_deserializer
     }
-
     consumer = DeserializingConsumer(consumer_conf)
-    consumer.subscribe([kafka_conf['topic']])
+    consumer.subscribe([config['kafka']['topic']])
 
+    logger = setup_logger(__name__)
     logger.info("Esperando mensajes de TLE...")
+
     try:
-        with get_db_connection(db_config) as conn:
-            while True:
-                try:
-                    msg = consumer.poll(1.0)
-                    if msg is None:
-                        continue
+        while True:
+            msg = consumer.poll(1.0)
+            if msg is None:
+                continue
 
-                    value = msg.value()
-                    if value is None:
-                        print("Mensaje recibido pero vacío o no deserializable.")
-                        continue
-                   
-                    try:
-                        handle_tle_message(conn, value)
-                        logger.info("Mensaje procesado con éxito.")
-                    except Exception as e:
-                        logger.error(f"Error procesando mensaje: {e}", exc_info=True)
+            value = msg.value()
+            if value is None:
+                logger.warning("Mensaje recibido pero vacío o no deserializable.")
+                continue
 
-                except Exception as e:
-                    logger.error(f"Error procesando mensaje: {e}", exc_info=True)
+            try:
+                orchestrator.handle_tle_message(value)
+                logger.info("Mensaje procesado con éxito.")
+            except Exception as e:
+                logger.error(f"Error procesando mensaje: {e}", exc_info=True)
+
     except KeyboardInterrupt:
         logger.info("Interrupción manual detectada. Cerrando consumidor...")
     finally:
