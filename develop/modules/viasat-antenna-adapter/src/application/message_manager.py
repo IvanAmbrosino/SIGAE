@@ -5,10 +5,10 @@ from time import sleep
 
 from domain.validar_planificacion import ValidatePlann, ValidateTLE # pylint: disable=import-error
 from domain.make_file import MakeTLEFile, MakePlannFile # pylint: disable=import-error
+from domain.transforms import TransformTle # pylint: disable=import-error
 from infraestructure.config_manager import ConfigManager # pylint: disable=import-error
 from infraestructure.antenna_connections import SFTPTunnel, SFTPDirect, SFTPDobleTunnel # pylint: disable=import-error
 from infraestructure.sqlite_manager import SQLiteManager # pylint: disable=import-error
-from domain.transforms import TransformTle # pylint: disable=import-error
 
 
 class MessageManager:
@@ -132,7 +132,7 @@ class MessageManager:
                     mtf.remove_tmp_files()                                        # Limpio el directorio /tmp
                     return True                                                   # Aviso de llegada correcta del TLE a la antena  -> Commit en Kafka
                 self.logger.error("Error al enviar el archivo de TLE")
-            return False
+            self.logger.error("Error al validar el TLE")
         elif msg["message_type"] == self.app_config['message_types']['plan_type']:
             self.logger.debug("Procesando mensaje tipo %s",self.app_config['message_types']['tle_type'])
             if ValidatePlann(self.logger).validate(msg): # Valida la planificacion
@@ -143,7 +143,7 @@ class MessageManager:
                     self.save_plann_in_db(msg)  # Guarda o actualiza la planificacion en la BD
                     return True                 # Aviso de llegada correcta de la Planificacion a la antena -> Commit en Kafka
                 self.logger.error("Error al enviar el archivo de Planificación")
-            return False
+            self.logger.error("Error al validar la planificacion")
         elif msg["message_type"] == self.app_config['message_types']['plan_tle_type']:
             self.logger.debug("Procesando mensaje tipo %s",self.app_config['message_types']['tle_type'])
             for tle in msg['tles']: # Debemos recorrer cada uno de los TLEs.
@@ -151,6 +151,7 @@ class MessageManager:
                     mtf = MakeTLEFile()
                     mtf.make_file_to_send(tle)       # Primero armo y envio el TLE
                     if self.send_tle_file():         # Enviamos cada uno de los TLEs
+                        self.save_tle_in_db(msg)     # Guarda el TLE en la BD
                         mtf.remove_tmp_files()       # Limpiamos los archivos
             if ValidatePlann(self.logger).validate(msg['plan'], chequeo= False): # Valida la planificacion, sin el chequeo de que tiene tle
                 mpf = MakePlannFile()

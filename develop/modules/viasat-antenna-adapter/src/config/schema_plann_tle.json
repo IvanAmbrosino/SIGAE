@@ -46,8 +46,9 @@
                 { "name": "timestamp", "type": "string" }
                         ]
                     }
-                }
-            }
+                },
+                "default": []
+        }
 
     ]
 }

@@ -18,6 +18,15 @@ ENV_TO_CONFIG_KEYS = {
 class ConfigManager:
     """Configuration and Environment Variables Manager"""
 
+    def read_config_string(self, config_file):
+        """Read a string from the config file"""
+        try:
+            with open(config_file, "r", encoding='utf-8') as fp:
+                return fp.read().strip()
+        except (IOError,OSError) as err:
+            print('Error reading configuration file -> %s. Error -> %s',config_file, err)
+        return ""
+
     def read_secret(self, secret):
         """Read secrets from docker and return it"""
         try:

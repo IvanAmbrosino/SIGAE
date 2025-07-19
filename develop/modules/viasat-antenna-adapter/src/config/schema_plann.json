@@ -1,37 +1,24 @@
 {
-  "type": "record",
-  "name": "FullPlanMessage",
-  "namespace": "com.tuempresa.planificacion",
-  "doc": "Mensaje completo de planificación de una antena",
-  "fields": [
-    {
-      "name": "type",
-      "type": {
-        "type": "enum",
-        "name": "MessageType",
-        "symbols": ["full_plan"]
-      },
-      "default": "full_plan"
-    },
+"type": "record",
+"name": "FullPlanMessage",
+"namespace": "com.tuempresa.planificacion",
+"doc": "Mensaje completo de planificación de una antena",
+"fields": [
+    { "name": "message_type","type": "string" },
     { "name": "antenna_id", "type": "string" },
-    {
-      "name": "timestamp",
-      "type": {
-        "type": "long",
-        "logicalType": "timestamp-millis"
-      }
-    },
+    { "name": "timestamp", "type": "string" },
     { "name": "source", "type": "string" },
     {
-      "name": "plan",
-      "type": {
+    "name": "plan",
+    "type": {
         "type": "array",
         "items": {
-          "name": "PasePlanificado",
-          "type": "record",
-          "fields": [
+        "name": "PasePlanificado",
+        "type": "record",
+        "fields": [
             { "name": "task_id", "type": "string" },
             { "name": "action", "type": "string" },
+            { "name": "antenna_id", "type": "string" },
             { "name": "satellite", "type": "string" },
             { "name": "norad_id", "type": "string" },
             { "name": "config_id", "type": "int" },
@@ -39,9 +26,10 @@
             { "name": "end", "type": "string" },
             { "name": "prepass_seconds", "type": "int", "default": 120 },
             { "name": "postpass_seconds", "type": "int", "default": 60 }
-          ]
+                    ]
+                }
+            }
         }
-      }
-    }
-  ]
+
+    ]
 }

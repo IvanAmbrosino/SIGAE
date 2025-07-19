@@ -7,6 +7,7 @@ from infraestructure.sqlite_manager import SQLiteManager # pylint: disable=impor
 from infraestructure.config_manager import ConfigManager # pylint: disable=import-error
 from infraestructure.kafka_adapter import KafkaConnector # pylint: disable=import-error
 from application.message_manager import MessageManager # pylint: disable=import-error
+from domain.make_message import MakeMessages # pylint: disable=import-error
 
 logger = logging.getLogger("Main")
 
@@ -15,14 +16,17 @@ class AntenaAdapter:
     def __init__(self):
         self.config_manager = ConfigManager()
         self.config = self.config_manager.load_config()              # Se cargan las configuracioens
+        self.plann_type = self.config['app']['message_types']['plan_type']
+        self.plann_tle_type = self.config['app']['message_types']['plan_tle_type']
 
         self.script_dir = os.path.dirname(os.path.abspath(__file__)) # Directory of the script
         self.logs_config = self.config['logs']                       # Logging configuration
-        kafka_config = self.config['kafka']                          # Kafka connection configuration
+        self.kafka_config = self.config['kafka']                          # Kafka connection configuration
         self.load_logger()                                           # Carga la configuracion de los logs
 
-        self.kafka_adapter = KafkaConnector(kafka_config, logger)
+        self.kafka_adapter = KafkaConnector(self.kafka_config, logger)
         self.process_message = MessageManager(logger)
+        self.make_message = MakeMessages()
 
         # Inicializacion del modulo
         SQLiteManager().inicializar() # Inicianlizacion de la base de datos (en caso que no exista)
@@ -31,8 +35,11 @@ class AntenaAdapter:
             try:
                 if self.process_message.process_message(message_value):
                     logger.debug("Mensaje procesado correctamente!!!")
-                else:
-                    logger.error("Mensaje no procesado correctamente: process_message returns False")
+                    if self.config['app']['send_ack'] and (message_value["message_type"] == self.plann_type or message_value["message_type"] == self.plann_tle_type):
+                        for task in message.get('plan', []): # Si es planificacion y se encuentra habilitado, se envia el ACK
+                            self.kafka_adapter.send_message(topic=self.kafka_config['ack_topic'], # Envia un ACK por cada Task
+                                                            key=self.kafka_config['ack_topic'],
+                                                            value=self.make_message.make_ack_message(task))
                 logger.debug("Mensaje commiteado en kafka")
                 self.kafka_adapter.commmit_message(message)
             except Exception as e: # pylint: disable=broad-exception-caught

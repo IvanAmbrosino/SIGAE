@@ -81,9 +81,14 @@ class ValidateTLE(Validator):
         """Verifica el formato del TLE y el CRC"""
         try:
             if len(tle['line1']) == 69 and len(tle['line2']) == 69:
-                if self.validate_tle_checksum(tle['line1']) and self.validate_tle_checksum(tle['line2']):
+                line1_status = self.validate_tle_checksum(tle['line1'])
+                line2_status = self.validate_tle_checksum(tle['line2'])
+                if line1_status and line2_status:
                     self.logger.debug("Se valida correctemente el formato del TLE y el CRC")
                     return True
+                self.logger.error("Error en el checksum del TLE. Line1 status: %s - Line2 status: %s",
+                                      line1_status, line2_status)
+            self.logger.error("Error al verificar el largo de las lineas del TLE")
         except KeyError as e:
             self.logger.error("Error al validar, el json es incorrecto: %s",e)
         return False
@@ -162,28 +167,37 @@ class ValidatePlann(Validator):
                 self.logger.warning("Tarea inválida: el mensaje no contiene los campos requeridos por la accion -> %s", task)
                 return False
 
-            if self.unique_task_id(task['task_id']):
-                self.logger.warning("ID de tarea no única: %s", task['task_id'])
-                return False
+            if self.configs['app']['actions']['purge']: # Si el mensaje es tipo "PURGE"
+                return True
 
-            try:
-                task['start'] = self.validate_isoformat(task['start'])
-                task['end'] = self.validate_isoformat(task['end'])
-            except ValueError as e:
-                self.logger.error("Error formateanfo fecha: %s",e)
-                return False
+            if self.configs['app']['actions']['delete']: # Si el mensaje es de tipo "DELETE"
+                if not self.unique_task_id(task['task_id']):
+                    self.logger.warning("No existe tarea con ese ID para borrar: %s", task['task_id'])
+                    return False
 
-            if not self.validate_start_time(task['start']):
-                self.logger.warning("Hora de inicio inválida: %s", task['start'])
-                return False
+            elif self.configs['app']['actions']['add']: # Si el mensaje es de tipo "ADD"
+                if self.unique_task_id(task['task_id']):
+                    self.logger.warning("ID de tarea no única: %s", task['task_id'])
+                    return False
 
-            if self.has_conflict(task):
-                self.logger.warning("Conflicto detectado con tarea: %s. Existen actividades planificadas en esa ventana", task['task_id'])
-                return False
+                try:
+                    task['start'] = self.validate_isoformat(task['start'])
+                    task['end'] = self.validate_isoformat(task['end'])
+                except ValueError as e:
+                    self.logger.error("Error formateanfo fecha: %s",e)
+                    return False
 
-            if chequeo and not self.validate_freshness_tle(task['norad_id']):
-                self.logger.warning("TLE desactualizado para NORAD ID: %s", task['norad_id'])
-                return False
+                if not self.validate_start_time(task['start']):
+                    self.logger.warning("Hora de inicio inválida: %s", task['start'])
+                    return False
+
+                if self.has_conflict(task):
+                    self.logger.warning("Conflicto detectado con tarea: %s. Existen actividades planificadas en esa ventana", task['task_id'])
+                    return False
+
+                if chequeo and not self.validate_freshness_tle(task['norad_id']):
+                    self.logger.warning("TLE desactualizado para NORAD ID: %s", task['norad_id'])
+                    return False
 
         return True
 
@@ -195,13 +209,14 @@ class ValidatePlann(Validator):
             - devuelve False si no existe una task con ese ID
         """
         exists = self.sqlite_manager.pase_ya_programado(task_id)
-        self.logger.debug("Existe la tarea en la bd? -> %s",exists)
+        self.logger.debug("Existe la tarea en la Base de Datos? -> %s",exists)
         return exists
 
     def validate_freshness_tle(self, norad_id):
         """Consulta en la bd si existe un TLE para la pasada"""
         tles = self.sqlite_manager.get_freshness_tle(norad_id, freshness_hours=self.configs['app']['freshness_hours_tle'])
         if tles:
+            self.logger.debug("Epoch del ultimo TLE mas fresco: %s",tles)
             return True
         self.logger.error("No se encuentran TLEs Frescos: %s",tles)
         return False
@@ -246,5 +261,5 @@ class ValidatePlann(Validator):
 
     def format_vfi_time(self, dt: datetime) -> str:
         """Validar el formato de fecha"""
-        #"""Convierte datetime a formato VFI: YYYY DDD HH:MM:SS"""
+        # Convierte datetime a formato VFI: YYYY DDD HH:MM:SS
         return dt.strftime("%Y %j %H:%M:%S")
