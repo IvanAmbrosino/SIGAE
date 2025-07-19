@@ -56,6 +56,7 @@ class PostTle():
 if __name__ == "__main__":
     tle = True
     plann = True
+    plann_tle = True
     if tle:
         PT = PostTle()
         TLE_SCHEMA = """{
@@ -77,9 +78,9 @@ if __name__ == "__main__":
             "message_type": "TLE",
             "norad_id": "27424",
             "satellite_name": "AQUA",
-            "line1": "1 27424U 02022A   25196.49513346  .00000619  00000-0  13513-3 0  9995",
+            "line1": "1 27424U 02022A   25200.49513346  .00000619  00000-0  13513-3 0  9995",
             "line2": "2 27424  98.3792 155.2050 0001077  54.3075  55.4292 14.61346150234126",
-            "timestamp": "2025-07-14T13:16:14Z"
+            "timestamp": "2025-07-20T13:16:14Z"
         }
 
         pprint.pprint(tle_random)
@@ -125,18 +126,109 @@ if __name__ == "__main__":
         planificacion_random = {
                                 "message_type": "PLANN",
                                 "antenna_id": "ANTENA_DEFAULT",
-                                "timestamp": "2025-07-11T14:00:00Z",
+                                "timestamp": "2025-07-20T20:00:00Z",
                                 "source": "planificador_automatico",
                                 "plan": [
                                     {
-                                    "task_id": "SAOCOM1B_ANTENA_6_2025_193_130002",
+                                    "task_id": "SAOCOM1B_ANTENA_6_2025_193_130001",
                                     "satellite": "SAOCOM-1B",
                                     "action": "ADD",
                                     "antenna_id": "VIASAT",
                                     "norad_id": "43641",
                                     "config_id": 10,
-                                    "start": "2025-07-16T15:16:00Z",
-                                    "end": "2025-07-16T15:17:00Z",
+                                    "start": "2025-07-20T15:16:00Z",
+                                    "end": "2025-07-20T15:17:00Z",
+                                    "prepass_seconds": 120,
+                                    "postpass_seconds": 60
+                                    },
+                                    {
+                                    "task_id": "AQUA_ANTENA_6_2025_193_130001",
+                                    "satellite": "AQUA",
+                                    "action": "ADD",
+                                    "antenna_id": "VIASAT",
+                                    "norad_id": "27424",
+                                    "config_id": 9,
+                                    "start": "2025-07-20T16:16:00Z",
+                                    "end": "2025-07-20T16:17:00Z",
+                                    "prepass_seconds": 120,
+                                    "postpass_seconds": 60
+                                    }
+                                ]
+                            }
+        pprint.pprint(planificacion_random)
+        PT.kafka_producer(message= planificacion_random, topic= 'PLANN')
+
+    if plann_tle:
+        PT = PostTle()
+        PLANN_TLE_SCHEMA = """{
+                "type": "record",
+                "name": "FullPlanMessage",
+                "namespace": "com.tuempresa.planificacion",
+                "doc": "Mensaje completo de planificación de una antena",
+                "fields": [
+                    { "name": "message_type","type": "string" },
+                    { "name": "antenna_id", "type": "string" },
+                    { "name": "timestamp", "type": "string" },
+                    { "name": "source", "type": "string" },
+                    {
+                    "name": "plan",
+                    "type": {
+                        "type": "array",
+                        "items": {
+                        "name": "PasePlanificado",
+                        "type": "record",
+                        "fields": [
+                            { "name": "task_id", "type": "string" },
+                            { "name": "action", "type": "string" },
+                            { "name": "antenna_id", "type": "string" },
+                            { "name": "satellite", "type": "string" },
+                            { "name": "norad_id", "type": "string" },
+                            { "name": "config_id", "type": "int" },
+                            { "name": "start", "type": "string" },
+                            { "name": "end", "type": "string" },
+                            { "name": "prepass_seconds", "type": "int", "default": 120 },
+                            { "name": "postpass_seconds", "type": "int", "default": 60 }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                    "name": "tles",
+                    "type": {
+                        "type": "array",
+                        "items": {
+                        "name": "tle",
+                        "type": "record",
+                        "fields": [
+                            { "name": "norad_id", "type": "string" },
+                            { "name": "satellite_name", "type": "string" },
+                            { "name": "line1", "type": "string" },
+                            { "name": "line2", "type": "string" },
+                            { "name": "timestamp", "type": "string" }
+                                ]
+                            }
+                        },
+                        "default": []
+                    }
+                    ]
+                }
+                """
+        PT.conect_kafka_producer(schema=PLANN_TLE_SCHEMA)
+        planificacion_tle_random = {
+                                "message_type": "PLANNTLE",
+                                "antenna_id": "ANTENA_DEFAULT",
+                                "timestamp": "2025-07-20T14:00:00Z",
+                                "source": "planificador_automatico",
+                                "plan": [
+                                    {
+                                    "task_id": "SAOCOM1B_ANTENA_6_2025_193_130002",
+                                    "satellite": "SAOCOM 1A",
+                                    "action": "ADD",
+                                    "antenna_id": "VIASAT",
+                                    "norad_id": "43641",
+                                    "config_id": 10,
+                                    "start": "2025-07-20T15:16:00Z",
+                                    "end": "2025-07-20T15:17:00Z",
                                     "prepass_seconds": 120,
                                     "postpass_seconds": 60
                                     },
@@ -147,12 +239,30 @@ if __name__ == "__main__":
                                     "antenna_id": "VIASAT",
                                     "norad_id": "27424",
                                     "config_id": 9,
-                                    "start": "2025-07-16T16:16:00Z",
-                                    "end": "2025-07-16T16:17:00Z",
+                                    "start": "2025-07-20T16:16:00Z",
+                                    "end": "2025-07-20T16:17:00Z",
                                     "prepass_seconds": 120,
                                     "postpass_seconds": 60
                                     }
+                                ],
+                                "tles":[
+                                    {
+                                    "message_type": "TLE",
+                                    "norad_id": "43641",
+                                    "satellite_name": "SAOCOM 1A",
+                                    "line1": "1 43641U 18076A   25199.83642496  .00000339  00000-0  49107-4 0  9998",
+                                    "line2": "2 43641  97.8891  26.3585 0001423  92.3672 267.7704 14.82164894366724",
+                                    "timestamp": "2025-07-20T13:16:14Z"
+                                    },
+                                    {
+                                    "message_type": "TLE",
+                                    "norad_id": "27424",
+                                    "satellite_name": "AQUA",
+                                    "line1": "1 27424U 02022A   25199.83346454  .00000668  00000-0  14490-3 0  9999",
+                                    "line2": "2 27424  98.3795 158.5862 0000961  56.6090 325.2257 14.61351222234618",
+                                    "timestamp": "2025-07-20T13:16:14Z"
+                                    }
                                 ]
                             }
-        pprint.pprint(planificacion_random)
-        PT.kafka_producer(message= planificacion_random, topic= 'PLANN')
+        pprint.pprint(planificacion_tle_random)
+        PT.kafka_producer(message= planificacion_tle_random, topic= 'PLANN')

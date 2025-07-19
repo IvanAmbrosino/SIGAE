@@ -146,14 +146,17 @@ class MessageManager:
             return False
         elif msg["message_type"] == self.app_config['message_types']['plan_tle_type']:
             self.logger.debug("Procesando mensaje tipo %s",self.app_config['message_types']['tle_type'])
-            if ValidateTLE(self.logger).validate(msg, chequeo= False):         # Valida el TLE. sin el chequeo de que tiene planificacion
-                if ValidatePlann(self.logger).validate(msg, chequeo= False):   # Valida la planificacion, sin el chequeo de que tiene tle
+            for tle in msg['tles']: # Debemos recorrer cada uno de los TLEs.
+                if ValidateTLE(self.logger).validate(tle, chequeo= False): # Valida el TLE. sin el chequeo de que tiene planificacion
                     mtf = MakeTLEFile()
-                    mtf.make_file_to_send(msg['plan'])                      # Primero armo y envio el TLE
-                    if self.send_tle_file():
-                        mtf.remove_tmp_files()
-                    mpf = MakePlannFile()
-                    mpf.make_file_to_send(msg['tles'])                      # Segundo armo y envio la Planificacion
-                    if self.send_plann_file():
-                        mpf.remove_tmp_files()
+                    mtf.make_file_to_send(tle)       # Primero armo y envio el TLE
+                    if self.send_tle_file():         # Enviamos cada uno de los TLEs
+                        mtf.remove_tmp_files()       # Limpiamos los archivos
+            if ValidatePlann(self.logger).validate(msg['plan'], chequeo= False): # Valida la planificacion, sin el chequeo de que tiene tle
+                mpf = MakePlannFile()
+                mpf.make_file_to_send(msg['plan'])  # Segundo armo y envio la Planificacion
+                if self.send_plann_file():
+                    mpf.remove_tmp_files()
+                    self.save_plann_in_db(msg)      # Guarda o actualiza la planificacion en la BD
+                    return True                     # Solo nos interesa que se cargue bien la planificacion
         return False

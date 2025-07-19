@@ -6,7 +6,7 @@ app:
   message_types: # Seteo de los nombres para los Tipos de Mensajes
     tle_type: "TLE"
     plan_type: "PLANN"
-    plan_tle_type: "PLANTLE"
+    plan_tle_type: "PLANNTLE"
 send:
   connection_method: "direct" # / tunnel / double_tunnel
   sleep_time: 10 # Espera por la respuesta de la antena
