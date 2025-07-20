@@ -1,6 +1,8 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from domain.ports.ground_station_repository import GroundStationRepository
 from infrastructure.db import get_db_connection
+from domain.entities.antenna import Antenna, AntennaStatus
+
 
 class PostgresGroundStationRepository(GroundStationRepository):
     def __init__(self, db_config):
@@ -48,3 +50,29 @@ class PostgresGroundStationRepository(GroundStationRepository):
             return (lat, lon, alt)
         else:
             return None
+        
+        
+    def get_compatible_antennas(self, satellite_id: str) -> List[Antenna]:
+        with get_db_connection(self.db_config) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT a.id, a.name, a.operational_status, a.is_active, a.model, a.quality_level
+                    FROM antennas a
+                    JOIN satellite_antenna_compatibility sac ON a.id = sac.antenna_id
+                    WHERE sac.satellite_id = %s
+                    AND a.operational_status = 'operational'
+                    AND a.is_active = TRUE
+                """, (satellite_id,))
+                rows = cur.fetchall()
+
+        return [
+            Antenna(
+                id=row[0], 
+                name=row[1], 
+                operational_status=AntennaStatus(row[2]), 
+                is_active=row[3],
+                model=row[4],
+                quality_level=row[5]
+            )
+            for row in rows
+        ]

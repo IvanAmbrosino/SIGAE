@@ -76,6 +76,40 @@ class Orchestrator:
             logger.info(f"Pasada guardada: {json.dumps(pasada.to_dict(), default=str)}")
 
         self.pass_activity_repository.save_pass_activities(valid_passes)
+        # Asignar antena automáticamente a cada actividad
+        self.assign_antennas_to_activities(valid_passes)
+
+    
+    
+    def assign_antennas_to_activities(self, activities: List[PassActivity]):
+        for activity in activities:
+            # Aca solo trae las antenas que son compatibles con el satellite de la tabla satellite_antenna_compatibility
+            compatible_antennas = self.ground_station_repository.get_compatible_antennas(activity.satellite_id)
+
+            for antenna in compatible_antennas:
+                # Verifica que la antenna no tenga otra actividad en ese rango horario
+                # Falta ver el tema de la prioridad
+                if self.pass_activity_repository.is_antenna_available(
+                    antenna_id=antenna.id,
+                    start_time=activity.start_time,
+                    end_time=activity.end_time
+                ):
+                    
+                    self.pass_activity_repository.assign_antenna_to_activity(
+                        activity_id=activity.id,
+                        antenna_id=antenna.id,
+                        assigned_by=None  # Esto por ser automatico
+                    )
+                    logger.info(
+                        f"Antenna {antenna.name} asignada a actividad {activity.id} "
+                        f"desde {activity.start_time.isoformat()} hasta {activity.end_time.isoformat()}"
+                        )
+                    break
+            else:
+                logger.warning(
+                    f"No se encontró antena disponible para la actividad {activity.id} "
+                    f"(rango: {activity.start_time.isoformat()} → {activity.end_time.isoformat()})"
+                )
 
 
     def _can_propagate_pass(self, pasada : PassActivity, satellite, gs_config) -> bool:
@@ -89,3 +123,4 @@ class Orchestrator:
         if night_start < night_end:
             return night_start <= hour < night_end
         return hour >= night_start or hour < night_end
+

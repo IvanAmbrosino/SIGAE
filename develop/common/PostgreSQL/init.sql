@@ -258,7 +258,8 @@ INSERT INTO satellites
 VALUES
 ('25544', 'ISS', 'high', 'Estación Espacial Internacional', TRUE, TRUE, TRUE, TRUE, 10.0, 90.0, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('27424', 'AQUA', 'medium', 'Satélite de observación de la NASA', TRUE, TRUE, FALSE, TRUE, 15.0, 85.0, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('39084', 'LANDSAT-8', 'critical', 'Satélite de observación terrestre', TRUE, TRUE, TRUE, FALSE, 20.0, 88.0, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('39084', 'LANDSAT-8', 'critical', 'Satélite de observación terrestre', TRUE, TRUE, TRUE, FALSE, 20.0, 88.0, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('25338', 'NOAA 15', 'low', 'Satélite meteorológico NOAA 15', TRUE, TRUE, TRUE, TRUE, 10.0, 85.0, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insertar estación terrestre por defecto: Córdoba, Córdoba
 INSERT INTO ground_stations
@@ -271,3 +272,75 @@ INSERT INTO ground_station_configurations
 (id, ground_station_id, default_propagation_hours, night_start_hour, night_end_hour, created_at, updated_at)
 VALUES
 ('config-cba-001', 'station-cba-001', 72, 20, 6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); 
+
+
+
+
+
+-- Antena S-Band para ISS
+INSERT INTO antennas (id, ground_station_id, name, model, min_elevation, operational_status, quality_level, created_at, updated_at)
+VALUES (
+  '00f4e120-1b7d-462f-838b-43f7b1f577b8',
+  'station-cba-001',
+  'Antena S-Band Alta',
+  'ASB-1000',
+  10.0,
+  'operational',
+  'high',
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
+);
+
+-- Antena X-Band para AQUA
+INSERT INTO antennas (id, ground_station_id, name, model, min_elevation, operational_status, quality_level, created_at, updated_at)
+VALUES (
+  'c8b44844-26c7-4c91-9f77-e0ee041a590d',
+  'station-cba-001',
+  'Antena X-Band Media',
+  'AXB-500',
+  15.0,
+  'operational',
+  'medium',
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
+);
+
+-- Capacidades de Antena S-Band (ISS)
+INSERT INTO antenna_capabilities (id, antenna_id, frequency_band, min_frequency, max_frequency, polarization, data_rate)
+VALUES (
+  '309d20f6-bcce-46ad-a331-6d3a2c544f9a',
+  '00f4e120-1b7d-462f-838b-43f7b1f577b8',
+  'S',
+  2000.00,
+  2200.00,
+  'circular',
+  100.0
+);
+
+-- Capacidades de Antena X-Band (AQUA)
+INSERT INTO antenna_capabilities (id, antenna_id, frequency_band, min_frequency, max_frequency, polarization, data_rate)
+VALUES (
+  '4b0ad5bf-1a16-44a9-b773-8154ff5beead',
+  'c8b44844-26c7-4c91-9f77-e0ee041a590d',
+  'X',
+  8000.00,
+  8500.00,
+  'linear',
+  200.0
+);
+
+-- ISS (S-band) compatible con antena S-band
+INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
+VALUES ('25544', '00f4e120-1b7d-462f-838b-43f7b1f577b8');
+
+-- AQUA (X-band) compatible con antena X-band
+INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
+VALUES ('27424', 'c8b44844-26c7-4c91-9f77-e0ee041a590d');
+
+-- LANDSAT-8 compatible con antena S-band
+INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
+VALUES ('39084', '00f4e120-1b7d-462f-838b-43f7b1f577b8');
+
+-- NOAA 15 (X-band) compatible con antena X-band
+INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
+VALUES ('25338', 'c8b44844-26c7-4c91-9f77-e0ee041a590d');

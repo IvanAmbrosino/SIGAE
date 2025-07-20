@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from enum import Enum
 
@@ -30,7 +31,9 @@ class PassActivity:
         status: Status = Status.NEW,
         priority: Priority = Priority.MEDIUM,
         orbit_number: str | None = None,
+        id: str | None = None  # Agregado
     ):
+        self.id = id or str(uuid.uuid4())  # ← Generación automática de UUID
         self.satellite_id = satellite_id
         self.start_time = start_time
         self.max_elevation_time = max_elevation_time
@@ -59,6 +62,7 @@ class PassActivity:
 
     def to_dict(self):
         return {
+            "id": self.id,
             "satellite_id": self.satellite_id,
             "start_time": self.start_time,
             "max_elevation_time": self.max_elevation_time,

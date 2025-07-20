@@ -1,0 +1,16 @@
+US 17
+Asignar automáticamente antena
+Como sistema, quiero asignar automáticamente antenas a tareas según prioridades, capacidades y disponibilidad para optimizar el uso de recursos y asegurar que las pasadas sean viables técnica y operativamente.
+ 
+
+Criterios de aceptación
+Debe asignar antenas que estén en estado “disponible”
+Debe asignar las antenas en función de la prioridad del satélite
+Debe asignar las antenas en función de las antenas compatibles para cada satélite.
+Debe estar disponible la franja horaria requerida por la actividad.
+Debe registrar en cada actividad la asignación realizada, indicando el id de la antena. 
+ 
+Pruebas de aceptación
+
+
+

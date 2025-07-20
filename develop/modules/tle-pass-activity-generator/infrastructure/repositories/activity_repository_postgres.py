@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from domain.entities.pass_activity import PassActivity
 from domain.ports.activity_repository import ActivityRepository
 from infrastructure.db import get_db_connection
@@ -13,7 +13,7 @@ class PostgresActivityRepository(ActivityRepository):
     def save_pass_activities(self, passes: List[PassActivity]) -> None:
         # Filtrar duplicados por (satellite_id, orbit_number)
         seen = set()
-        unique_pasadas = []
+        unique_pasadas : List[PassActivity] = []
         for pasada in passes:
             key = (pasada.satellite_id, pasada.orbit_number)
             if key not in seen:
@@ -39,7 +39,7 @@ class PostgresActivityRepository(ActivityRepository):
         values = []
         for pasada in unique_pasadas:
             values.append((
-                str(uuid.uuid4()),
+                pasada.id,
                 pasada.satellite_id,
                 pasada.orbit_number,
                 pasada.start_time,
@@ -56,4 +56,29 @@ class PostgresActivityRepository(ActivityRepository):
         with get_db_connection(self.db_config) as conn:
             with conn.cursor() as cur:
                 execute_values(cur, sql, values, template=None, page_size=100)
+            conn.commit()
+
+
+    def is_antenna_available(self, antenna_id: str, start_time: datetime, end_time: datetime) -> bool:
+        with get_db_connection(self.db_config) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT 1
+                    FROM activity_assignments aa
+                    JOIN activities a ON aa.activity_id = a.id
+                    WHERE aa.antenna_id = %s
+                    AND tstzrange(a.start_time, a.end_time) && tstzrange(%s, %s)
+                    LIMIT 1
+                """, (antenna_id, start_time, end_time))
+                conflict = cur.fetchone()
+        return conflict is None
+    
+    def assign_antenna_to_activity(self, activity_id: str, antenna_id: str, assigned_by: Optional[str]) -> None:
+        assignment_id = str(uuid.uuid4())
+        with get_db_connection(self.db_config) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO activity_assignments (id, activity_id, antenna_id, assigned_by)
+                    VALUES (%s, %s, %s, %s)
+                """, (assignment_id, activity_id, antenna_id, assigned_by))
             conn.commit()
