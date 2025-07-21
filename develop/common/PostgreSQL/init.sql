@@ -6,8 +6,8 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     full_name VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP	
 );
 
 -- Tabla de roles
@@ -56,8 +56,8 @@ CREATE TABLE ground_station_configurations (
     default_propagation_hours INTEGER DEFAULT 24,
     night_start_hour INTEGER CHECK (night_start_hour >= 0 AND night_start_hour < 24),
     night_end_hour INTEGER CHECK (night_end_hour >= 0 AND night_end_hour < 24),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -72,8 +72,8 @@ CREATE TABLE antennas (
     operational_status VARCHAR(20) CHECK (operational_status IN ('operational', 'maintenance', 'out_of_service')),
     quality_level VARCHAR(10) CHECK (quality_level IN ('high', 'medium', 'low')),
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabla de capacidades de antena
@@ -106,8 +106,8 @@ CREATE TABLE satellites (
     -- Nuevo campo: indica si se puede obtener info desde una API externa
     can_fetch_from_api BOOLEAN DEFAULT FALSE,
 
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabla de compatibilidad satélite-antena
@@ -123,10 +123,10 @@ CREATE TABLE tle_data (
     satellite_id VARCHAR(36) REFERENCES satellites(id) ON DELETE CASCADE,
     line1 VARCHAR(255) NOT NULL,
     line2 VARCHAR(255) NOT NULL,
-    epoch TIMESTAMP NOT NULL,
+    epoch TIMESTAMPTZ NOT NULL,
     source VARCHAR(20) CHECK (source IN ('spacetrack', 'manual', 'api')),
     is_valid BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabla de actividades
@@ -134,15 +134,15 @@ CREATE TABLE activities (
     id VARCHAR(36) PRIMARY KEY,
     satellite_id VARCHAR(36) REFERENCES satellites(id) ON DELETE CASCADE,
     orbit_number VARCHAR(255),
-    start_time TIMESTAMP NOT NULL,
+    start_time TIMESTAMPTZ NOT NULL,
     max_elevation_time TIMESTAMP,
     max_elevation DECIMAL(5, 2),
-    end_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMPTZ NOT NULL,
     duration INTEGER NOT NULL,
     status VARCHAR(20) CHECK (status IN ('new', 'assigned', 'unassigned', 'pending', 'authorized', 'planned', 'modified', 'updated', 'critical')),
     priority VARCHAR(10) CHECK (priority IN ('critical', 'high', 'medium', 'low')),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (satellite_id, orbit_number)
 );
 
@@ -152,7 +152,7 @@ CREATE TABLE activity_assignments (
     activity_id VARCHAR(36) REFERENCES activities(id) ON DELETE CASCADE,
     antenna_id VARCHAR(36) REFERENCES antennas(id) ON DELETE CASCADE,
     assigned_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
-    assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_confirmed BOOLEAN DEFAULT FALSE,
     confirmed_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
     confirmed_at TIMESTAMP
@@ -172,15 +172,15 @@ CREATE TABLE activity_requirements (
 CREATE TABLE reservations (
     id VARCHAR(36) PRIMARY KEY,
     antenna_id VARCHAR(36) REFERENCES antennas(id) ON DELETE CASCADE,
-    start_time TIMESTAMP NOT NULL,
-    end_time TIMESTAMP NOT NULL,
+    start_time TIMESTAMPTZ NOT NULL,
+    end_time TIMESTAMPTZ NOT NULL,
     purpose VARCHAR(20) CHECK (purpose IN ('maintenance', 'client', 'other')),
     description TEXT,
     requested_by VARCHAR(36) REFERENCES users(id) ON DELETE CASCADE,
     approved_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
     status VARCHAR(20) CHECK (status IN ('pending', 'approved', 'rejected', 'completed')),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabla de configuraciones del sistema
@@ -191,7 +191,7 @@ CREATE TABLE system_configurations (
     data_type VARCHAR(10) CHECK (data_type IN ('string', 'number', 'boolean', 'json')),
     description TEXT,
     updated_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabla de notificaciones
@@ -204,7 +204,7 @@ CREATE TABLE notifications (
     notification_type VARCHAR(20) CHECK (notification_type IN ('activity', 'reservation', 'system', 'alert')),
     related_entity_type VARCHAR(20) CHECK (related_entity_type IN ('activity', 'reservation', 'antenna', 'satellite', 'none')),
     related_entity_id VARCHAR(36),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tabla de historial de actividades
@@ -215,7 +215,7 @@ CREATE TABLE activity_history (
     change_type VARCHAR(20) CHECK (change_type IN ('create', 'update', 'status_change', 'assignment')),
     old_values JSONB,
     new_values JSONB,
-    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Crear función para actualizar automáticamente los campos updated_at
@@ -258,7 +258,8 @@ INSERT INTO satellites
 VALUES
 ('25544', 'ISS', 'high', 'Estación Espacial Internacional', TRUE, TRUE, TRUE, TRUE, 10.0, 90.0, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('27424', 'AQUA', 'medium', 'Satélite de observación de la NASA', TRUE, TRUE, FALSE, TRUE, 15.0, 85.0, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('39084', 'LANDSAT-8', 'critical', 'Satélite de observación terrestre', TRUE, TRUE, TRUE, FALSE, 20.0, 88.0, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+('39084', 'LANDSAT-8', 'critical', 'Satélite de observación terrestre', TRUE, TRUE, TRUE, FALSE, 20.0, 88.0, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('25338', 'NOAA 15', 'low', 'Satélite meteorológico NOAA 15', TRUE, TRUE, TRUE, TRUE, 10.0, 85.0, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insertar estación terrestre por defecto: Córdoba, Córdoba
 INSERT INTO ground_stations
@@ -271,3 +272,75 @@ INSERT INTO ground_station_configurations
 (id, ground_station_id, default_propagation_hours, night_start_hour, night_end_hour, created_at, updated_at)
 VALUES
 ('config-cba-001', 'station-cba-001', 72, 20, 6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); 
+
+
+
+
+
+-- Antena S-Band para ISS
+INSERT INTO antennas (id, ground_station_id, name, model, min_elevation, operational_status, quality_level, created_at, updated_at)
+VALUES (
+  '00f4e120-1b7d-462f-838b-43f7b1f577b8',
+  'station-cba-001',
+  'Antena S-Band Alta',
+  'ASB-1000',
+  10.0,
+  'operational',
+  'high',
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
+);
+
+-- Antena X-Band para AQUA
+INSERT INTO antennas (id, ground_station_id, name, model, min_elevation, operational_status, quality_level, created_at, updated_at)
+VALUES (
+  'c8b44844-26c7-4c91-9f77-e0ee041a590d',
+  'station-cba-001',
+  'Antena X-Band Media',
+  'AXB-500',
+  15.0,
+  'operational',
+  'medium',
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
+);
+
+-- Capacidades de Antena S-Band (ISS)
+INSERT INTO antenna_capabilities (id, antenna_id, frequency_band, min_frequency, max_frequency, polarization, data_rate)
+VALUES (
+  '309d20f6-bcce-46ad-a331-6d3a2c544f9a',
+  '00f4e120-1b7d-462f-838b-43f7b1f577b8',
+  'S',
+  2000.00,
+  2200.00,
+  'circular',
+  100.0
+);
+
+-- Capacidades de Antena X-Band (AQUA)
+INSERT INTO antenna_capabilities (id, antenna_id, frequency_band, min_frequency, max_frequency, polarization, data_rate)
+VALUES (
+  '4b0ad5bf-1a16-44a9-b773-8154ff5beead',
+  'c8b44844-26c7-4c91-9f77-e0ee041a590d',
+  'X',
+  8000.00,
+  8500.00,
+  'linear',
+  200.0
+);
+
+-- ISS (S-band) compatible con antena S-band
+INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
+VALUES ('25544', '00f4e120-1b7d-462f-838b-43f7b1f577b8');
+
+-- AQUA (X-band) compatible con antena X-band
+INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
+VALUES ('27424', 'c8b44844-26c7-4c91-9f77-e0ee041a590d');
+
+-- LANDSAT-8 compatible con antena S-band
+INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
+VALUES ('39084', '00f4e120-1b7d-462f-838b-43f7b1f577b8');
+
+-- NOAA 15 (X-band) compatible con antena X-band
+INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
+VALUES ('25338', 'c8b44844-26c7-4c91-9f77-e0ee041a590d');
