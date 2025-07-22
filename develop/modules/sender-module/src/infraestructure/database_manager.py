@@ -60,6 +60,52 @@ class DatabaseManager:
         results = self.execute_query(query, (satellite_id,), fetch=True)
         return results[0] if results else None
 
+    def get_activities_to_send(self) -> Optional[List[Dict]]:
+        """
+        Get the planning list to be sent
+        """
+        query = """
+        SELECT act.*, aa.*,
+            ant.name AS antenna_name,
+            ant.code AS antenna_code,
+            sat.name AS satellite_name
+            ac.description AS config_description,
+            ac.is_active AS config_is_active
+        FROM activities act
+        JOIN activity_assignments aa ON act.id = aa.activity_id
+        JOIN antennas ant ON aa.antenna_id = ant.id
+        JOIN satellites sat ON act.satellite_id = sat.id
+        LEFT JOIN activity_configuration ac ON (
+            ac.satellite_id = a.satellite_id 
+            AND ac.antenna_id = aa.antenna_id
+            AND ac.is_active = TRUE
+        )
+        WHERE aa.is_confirmed = TRUE 
+            AND act.status IN (%s)
+            AND act.start_time > NOW()
+            AND act.end_time < NOW() + INTERVAL '%s hour'
+        ORDER BY act.start_time
+        """
+        return self.execute_query(query, ('authorized', 72), fetch= True)
+
+    def get_activity_configurations(self) -> List[Dict]:
+        """Gets the configurations of the activities to be sent"""
+        query= """
+        SELECT satellite_id, antenna_id, config_number
+        FROM activity_configuration
+        WHERE is_active = TRUE
+        AND satellite_id IN (
+            SELECT a.satellite_id UNIQUE
+            FROM activities a
+            JOIN activity_assignments aa ON a.id = aa.activity_id
+            WHERE aa.is_confirmed = TRUE 
+                AND a.status IN (%s)
+                AND a.start_time > NOW()
+                AND a.end_time < NOW() + INTERVAL '%s hour'
+            )
+        """
+        return self.execute_query(query, ('authorized', 72), fetch= True)
+
     def update_satellite_priority(self, satellite_id: str, new_priority: str) -> bool:
         """Actualiza el nivel de prioridad de un satélite"""
         query = """

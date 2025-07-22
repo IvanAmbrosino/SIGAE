@@ -1,20 +1,40 @@
 """Modulo encargado de obtener el listado de planificacion para enviar"""
 from datetime import datetime, timedelta
+import logging
 from infraestructure.config_manager import ConfigManager
 from infraestructure.database_manager import DatabaseManager
+from application.make_message import MakeMessage
 
 class PlanningManager():
     """Clase principal para la obtencion de la planificacion y validacion de la misma"""
-    def __init__(self):
+    def __init__(self, logger: logging):
         self.config_manager = ConfigManager()
         self.configs = self.config_manager.load_config()
+        self.logger = logger
         self.db_configs = self.configs['database']
+        self.make_message = MakeMessage()
         self.database_manager = DatabaseManager(
             dbname=     self.db_configs["dbname"],
             user=       self.db_configs["user"],
             password=   self.config_manager.read_secret(self.db_configs["password"]),
             host=       self.db_configs["host"]
         )
+
+    def obtener_proxima_planificacion(self):
+        """Get the next schedule to send"""
+        self.logger.info("Getting planning ready to send")
+        self.database_manager.connect()
+        activities = self.database_manager.get_activities_to_send()
+        if activities:
+            self.logger.info("Hay nuevas actividades para ser enviadas")
+            antennas = [ actividad.antenna_id for actividad in activities if actividad.antenna_id ]
+            for antenna in antennas:
+                self.logger.info(f"Antena {antenna} tiene actividades pendientes")
+                activities_to_send = [ actividad for actividad in activities if actividad.antenna_id == antenna ]
+                self.logger.debug("Actividades a enviar: %s",activities_to_send)
+                self.make_message.make_plann_message(activities_to_send)
+
+
 
     def test_querrys(self):
         """Funcion de prueba de las funciones de consulta en la BD"""
@@ -59,6 +79,3 @@ class PlanningManager():
 
         finally:
             self.database_manager.disconnect()
-
-if __name__ == "__main__":
-    PlanningManager().test_querrys()

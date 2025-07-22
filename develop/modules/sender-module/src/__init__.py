@@ -35,25 +35,28 @@ class SenderModule:
               If the timeout is exceeded, a "warning" must be sent and the "message resent".
         """
         self.config_manager = ConfigManager()
-        self.planning_manager = PlanningManager()
         self.config = self.config_manager.load_config()              # Se cargan las configuracioens
 
         self.script_dir = os.path.dirname(os.path.abspath(__file__)) # Directory of the script
+        self.kafka_config = self.config['kafka']                     # Kafka connection configuration
+        self.app_config = self.config['app']                         # Application configuration
         self.logs_config = self.config['logs']                       # Logging configuration
-        self.kafka_config = self.config['kafka']                          # Kafka connection configuration
-        self.app_config = self.config['app']
         self.load_logger()                                           # Carga la configuracion de los logs
+        self.planning_manager = PlanningManager(logger=logger)       # Instancia del PlanningManager
 
         # Definimos los hilos y los guardamos
-        THREADS['sender_thread'] = threading.Thread(target=self.sender_thread, daemon=True)
         if self.app_config["ack_check"]:
+            THREADS['sender_thread'] = threading.Thread(target=self.sender_thread, daemon=True)
             THREADS['ack_listener_thread'] = threading.Thread(target=self.ack_listener_thread, daemon=True)
             THREADS['timeout_checker_thread'] = threading.Thread(target=self.timeout_checker_thread, daemon=True)
 
-        for t in THREADS.values():
-            t.start()
+            for t in THREADS.values():
+                t.start()
 
-        self.thread_watcher() # El proceso principal es el Supervisor
+            self.thread_watcher() # El proceso principal es el Supervisor
+
+        else:
+            self.sender_thread()  # Si no se chequea ACK, se ejecuta el hilo de envio como proceso principal
 
     def sender_thread(self):
         """Hilo que envia los mensajes de planificacion."""
@@ -61,11 +64,12 @@ class SenderModule:
         # pero si se pasa cierto tiempo, hace una consulta manual
         topic = self.kafka_config["topic"]["event_topic"]
         sender_kafka_adapter = KafkaConnector(self.kafka_config, topic, logger)
+        logger.info("Iniciando hilo de envio de mensajes: SENDER-THREAD")
         for message, message_value in sender_kafka_adapter.get_message(topic= 'EVENTS'):
             #try:
             if message_value['type'] == "NEWPLANN":
                 plan = self.planning_manager.obtener_proxima_planificacion() # Obtenemos la lista de planificacion a enviar
-                message_to_send= MakeMessage().make_message(plan)                       # Armamos el mensaje adecuado con toda la informacion
+                message_to_send= MakeMessage().make_message(plan)            # Armamos el mensaje adecuado con toda la informacion
                 sender_kafka_adapter.send_message(topic= 'PLANN',
                                                   key= 'PLANN',
                                                   value= message_to_send,
@@ -81,6 +85,7 @@ class SenderModule:
         """Hilo que escucha los ACK de los mensajes enviados."""
         topic = self.kafka_config["topic"]["ack_topic"]
         ack_kafka_adapter = KafkaConnector(self.kafka_config, topic, logger)
+        logger.info("Iniciando hilo de recepcion de mensajes: ACK-LISTENER-THREAD")
         for message, message_value in ack_kafka_adapter.get_message(topic= 'ACK'):
             with PENDING_ACK_LOCK:
                 if message_value["id"] in PENDING_ACK:
@@ -89,6 +94,7 @@ class SenderModule:
 
     def timeout_checker_thread(self):
         """Hilo que revisa los Timeouts de los ACK que no se recibieron."""
+        logger.info("Iniciando hilo que comprueba timeouts: TIMEOUT-CHECKER-THREAD")
         while True:
             #try:
             now = time.time()
@@ -104,6 +110,7 @@ class SenderModule:
 
     def thread_watcher(self):
         """Hilo supervisor de los demas hilos."""
+        logger.info("Iniciando hilo supervisor: SUPERVISORD-THREAD")
         while True:
             #try:
             for name, t in list(THREADS.items()):
