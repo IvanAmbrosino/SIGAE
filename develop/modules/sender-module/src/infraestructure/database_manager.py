@@ -65,26 +65,60 @@ class DatabaseManager:
         Get the planning list to be sent
         """
         query = """
-        SELECT act.*, aa.*,
+        SELECT 
+            act.id AS activity_id,
+            act.satellite_id,
+            act.orbit_number,
+            act.start_time,
+            act.max_elevation_time,
+            act.max_elevation,
+            act.end_time,
+            act.duration,
+            act.status AS activity_status,
+            act.priority,
+            aa.id AS assignment_id,
+            aa.antenna_id,
+            aa.is_confirmed,
+            aa.assigned_at,
+            aa.confirmed_at,
             ant.name AS antenna_name,
             ant.code AS antenna_code,
-            sat.name AS satellite_name
-            ac.description AS config_description,
-            ac.is_active AS config_is_active
+            sat.name AS satellite_name,
+            ac.config_number AS config_number,
+            CASE
+                WHEN act.status IN ('unassigned') THEN 'delete' -- Actividades canceladas (status cambiado a unassigned)
+                WHEN aa.last_sent_at IS NOT NULL AND act.updated_at > aa.last_sent_at THEN 'update'  -- Actividades modificadas (ya fueron enviadas pero tienen actualizaciones)
+                ELSE 'add'  -- Nuevas actividades que nunca se enviaron
+            END AS required_action,
+            -- Campos para control de envíos
+            act.updated_at,
+            aa.last_sent_at,
+            aa.send_status
         FROM activities act
-        JOIN activity_assignments aa ON act.id = aa.activity_id
-        JOIN antennas ant ON aa.antenna_id = ant.id
-        JOIN satellites sat ON act.satellite_id = sat.id
-        LEFT JOIN activity_configuration ac ON (
-            ac.satellite_id = a.satellite_id 
+        JOIN activity_assignments aa ON act.id = aa.activity_id -- El primer filtro es si tiene una asignacion
+        JOIN antennas ant ON aa.antenna_id = ant.id             -- Obtenemos los datos de la antena
+        JOIN satellites sat ON act.satellite_id = sat.id        -- Obtenemos los datos del satellite
+        LEFT JOIN activity_configuration ac ON (                -- Obtenemos la configuracion de actividad si existe
+            ac.satellite_id = act.satellite_id 
             AND ac.antenna_id = aa.antenna_id
             AND ac.is_active = TRUE
         )
-        WHERE aa.is_confirmed = TRUE 
-            AND act.status IN (%s)
-            AND act.start_time > NOW()
-            AND act.end_time < NOW() + INTERVAL '%s hour'
-        ORDER BY act.start_time
+        WHERE 
+            -- Filtro por ventana de tiempo relevante
+            act.end_time < NOW() + INTERVAL '72 hour' AND
+            act.start_time > NOW() - INTERVAL '3 year' AND
+            (
+                -- Caso 1: Asignaciones confirmadas que necesitan ser enviadas/actualizadas
+                (aa.is_confirmed = TRUE AND act.status IN ('authorized', 'planned', 'modified', 'updated') AND
+                (aa.last_sent_at IS NULL OR act.updated_at > aa.last_sent_at OR aa.send_status = 'failed'))
+                OR
+                -- Caso 2: Asignaciones que deben ser eliminadas (actividad cancelada)
+                (act.status IN ('unassigned') AND aa.is_confirmed = TRUE AND 
+                (aa.send_status != 'confirmed' OR aa.send_status IS NULL))
+            )
+        ORDER BY 
+            act.priority DESC,
+            act.start_time ASC;
         """
         return self.execute_query(query, ('authorized', 72), fetch= True)
 

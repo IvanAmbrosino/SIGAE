@@ -133,6 +133,16 @@ CREATE TABLE tle_data (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tabla de configuracion de actividad
+CREATE TABLE activity_configuration (
+    id VARCHAR(36) PRIMARY KEY,
+    satellite_id VARCHAR(36) REFERENCES satellites(id) ON DELETE CASCADE,
+    antenna_id VARCHAR(36) REFERENCES antennas(id) ON DELETE CASCADE,
+    config_number INTEGER NOT NULL DEFAULT 1, -- En caso que haya mas de una configuracion por par satellite-antena
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE  -- Para activar/desactivar configuraciones
+);
+
 -- Tabla de actividades
 CREATE TABLE activities (
     id VARCHAR(36) PRIMARY KEY,
@@ -143,47 +153,45 @@ CREATE TABLE activities (
     max_elevation DECIMAL(5, 2),
     end_time TIMESTAMPTZ NOT NULL,
     duration INTEGER NOT NULL,
-    status VARCHAR(20) CHECK (status IN ('new', 'assigned', 'unassigned', 'pending', 'authorized', 'planned', 'modified', 'updated', 'critical')),
+    status VARCHAR(20) CHECK (status IN ('new', 'assigned', 'unassigned', 'pending', 'authorized', 'loaded', 'canceled', 'planned', 'modified', 'updated', 'critical')),
     priority VARCHAR(10) CHECK (priority IN ('critical', 'high', 'medium', 'low')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ,
     UNIQUE (satellite_id, orbit_number)
 );
 
--- Tabla de configuracion de actividad
-CREATE TABLE activity_configuration (
-    id VARCHAR(36) PRIMARY KEY,
-    satellite_id VARCHAR(36) REFERENCES satellites(id) ON DELETE CASCADE,
-    antenna_id VARCHAR(36) REFERENCES antennas(id) ON DELETE CASCADE,
-
-    -- En caso que haya mas de una configuracion por par satellite-antena
-    config_number INTEGER NOT NULL DEFAULT 1,
-    description TEXT,
-    is_active BOOLEAN DEFAULT TRUE
-
-);
-
--- Tabla de asignaciones de actividad
+-- Tabla de asignaciones de actividad (permite multiples asignaciones por actividad pero solo una esta activa)
 CREATE TABLE activity_assignments (
-    id VARCHAR(36) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY, 
+    is_active BOOLEAN DEFAULT TRUE,                                     -- Indica si la asignación está activa (puede haber varias debido a reasignaciones de actividades)
+    unassigned_at TIMESTAMPTZ DEFAULT NULL,                             -- Fecha/hora de desasignación (en el caso que se desasigne la actividad)
     activity_id VARCHAR(36) REFERENCES activities(id) ON DELETE CASCADE,
     antenna_id VARCHAR(36) REFERENCES antennas(id) ON DELETE CASCADE,
-    --assigned_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
-    assigned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_confirmed BOOLEAN DEFAULT FALSE,
-    --confirmed_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
-    confirmed_at TIMESTAMP
+    --assigned_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,  -- Usuario que asigna la actividad
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,         -- Fecha/hora de asignacion
+    is_confirmed BOOLEAN DEFAULT FALSE,                                 -- Indica si la asignación fue confirmada por el usuario
+    --confirmed_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL, -- Usuario que confirma la asignacion
+    confirmed_at TIMESTAMPTZ,                                           -- Fecha/hora de confirmacion de la asignación
+    -- Campos para control de envíos
+    send_status VARCHAR(20) DEFAULT 'pending' CHECK (send_status IN ('pending', 'sent', 'failed', 'confirmed')), -- Estado del envio a la antena
+    last_sent_at TIMESTAMPTZ DEFAULT NULL                               -- Fecha/hora del último envío exitoso (luego con el campo updated_at de la actividad)
 );
 
--- Tabla de requisitos de actividad
---CREATE TABLE activity_requirements (
---    id VARCHAR(36) PRIMARY KEY,
---    activity_id VARCHAR(36) REFERENCES activities(id) ON DELETE CASCADE,
---    frequency_band VARCHAR(10) CHECK (frequency_band IN ('S', 'X', 'Ku', 'Ka', 'other')),
---    min_frequency DECIMAL(10, 2),
---    max_frequency DECIMAL(10, 2),
---    polarization VARCHAR(10) CHECK (polarization IN ('linear', 'circular', 'dual'))
---);
+CREATE TABLE activity_assignments (
+    id UUID PRIMARY KEY,
+    activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+    antenna_id UUID NOT NULL REFERENCES antennas(id) ON DELETE CASCADE,
+    is_active BOOLEAN DEFAULT TRUE,
+    send_status TEXT CHECK (send_status IN ('pending', 'sent', 'confirmed', 'failed')) DEFAULT 'pending',
+    send_action TEXT CHECK (send_action IN ('add', 'update', 'delete')),
+    retry_count INTEGER DEFAULT 0,
+    last_sent_at TIMESTAMPTZ,
+    last_attempt_at TIMESTAMPTZ,
+    assigned_at TIMESTAMPTZ DEFAULT NOW(),
+    unassigned_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- Tabla de reservaciones
 CREATE TABLE reservations (
@@ -322,7 +330,7 @@ INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id) VALUES
 -- Insertar configuraciones de actividad para satélites/antenna
 INSERT INTO activity_configuration (id, satellite_id, antenna_id, config_number, description, is_active) VALUES
 ('AC001', '25544', 'ANT001', 1, 'Configuración estándar para ISS', TRUE),
-('AC002', '25544', 'ANT001', 2, 'Configuración de alta ganancia para ISS', TRUE),
+('AC002', '25544', 'ANT002', 2, 'Configuración de alta ganancia para ISS', TRUE),
 ('AC003', '33591', 'ANT001', 1, 'Configuración para NOAA', TRUE),
 ('AC004', '25338', 'ANT001', 1, 'Configuración para HST', TRUE),
 ('AC005', '28654', 'ANT003', 1, 'Configuración para TDRS', TRUE),
@@ -337,43 +345,7 @@ INSERT INTO activities (id, satellite_id, orbit_number, start_time, max_elevatio
 ('ACT005', '39430', '13579', '2023-06-01 14:00:00+00', '2023-06-01 14:05:00', 32.80, '2023-06-01 14:10:00+00', 600, 'new', 'low');
 
 -- Insertar asignaciones de actividad sin usuarios
-INSERT INTO activity_assignments (id, activity_id, antenna_id, is_confirmed, confirmed_at) VALUES
-('ASG001', 'ACT001', 'ANT001', TRUE, NULL),
-('ASG002', 'ACT002', 'ANT003', TRUE, NULL),
-('ASG003', 'ACT003', 'ANT001', TRUE, NULL),
-('ASG004', 'ACT004', 'ANT003', TRUE, NULL),
-('ASG005', 'ACT005', 'ANT001', TRUE, NULL)
-
-
-SELECT satellite_id, antenna_id, config_number
-FROM activity_configuration
-WHERE is_active = TRUE
-AND satellite_id IN (
-    SELECT a.satellite_id UNIQUE
-    FROM activities a
-    JOIN activity_assignments aa ON a.id = aa.activity_id
-    WHERE aa.is_confirmed = TRUE 
-        AND a.status IN ('planned', 'authorized', 'assigned')
-        AND a.start_time > NOW() - INTERVAL '4 year'
-        AND a.end_time < NOW() + INTERVAL '72 hour'
-    )
-
-
-SELECT act.*, aa.*,
-    ant.name AS antenna_name,
-    ant.code AS antenna_code,
-    sat.name AS satellite_name,
-    ac.config_number AS config_number
-FROM activities act
-JOIN activity_assignments aa ON act.id = aa.activity_id
-JOIN antennas ant ON aa.antenna_id = ant.id
-JOIN satellites sat ON act.satellite_id = sat.id
-LEFT JOIN activity_configuration ac ON (
-    ac.satellite_id = act.satellite_id 
-    AND ac.antenna_id = aa.antenna_id
-    AND ac.is_active = TRUE
-)
-WHERE aa.is_confirmed = TRUE 
-    AND act.status IN ('planned', 'authorized', 'assigned')
-    AND act.start_time > NOW() - INTERVAL '4 year'
-    AND act.end_time < NOW() + INTERVAL '72 hour'
+INSERT INTO activity_assignments (id, activity_id, antenna_id, is_confirmed, confirmed_at, send_status, last_sent_at) VALUES
+('ASG001', 'ACT001', 'ANT001', TRUE, NULL, 'confirmed', '2023-06-01 14:05:00'),
+('ASG002', 'ACT002', 'ANT003', TRUE, NULL, 'pending', NULL),
+('ASG003', 'ACT003', 'ANT001', TRUE, NULL, 'pending', NULL)
