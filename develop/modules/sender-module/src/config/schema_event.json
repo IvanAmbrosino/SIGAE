@@ -1,0 +1,12 @@
+{
+    "type": "record",
+    "name": "EventMessage",
+    "namespace": "com.tuempresa.planificacion",
+    "doc": "Mensaje para los eventos del sistema",
+    "fields": [
+        { "name": "event_type","type": "string" },
+        { "name": "destination", "type": "string" },
+        { "name": "timestamp", "type": "string" },
+        { "name": "source", "type": "string" }
+    ]
+}

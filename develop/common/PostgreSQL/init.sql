@@ -163,34 +163,26 @@ CREATE TABLE activities (
 -- Tabla de asignaciones de actividad (permite multiples asignaciones por actividad pero solo una esta activa)
 CREATE TABLE activity_assignments (
     id VARCHAR(36) PRIMARY KEY, 
-    is_active BOOLEAN DEFAULT TRUE,                                     -- Indica si la asignación está activa (puede haber varias debido a reasignaciones de actividades)
-    unassigned_at TIMESTAMPTZ DEFAULT NULL,                             -- Fecha/hora de desasignación (en el caso que se desasigne la actividad)
     activity_id VARCHAR(36) REFERENCES activities(id) ON DELETE CASCADE,
     antenna_id VARCHAR(36) REFERENCES antennas(id) ON DELETE CASCADE,
+    
+    -- Campos que establece si la asignacion es la ultima activa o no, El campo unassigned_at indica si la actividad fue desasignada y permite tener la ultima
+    is_active BOOLEAN DEFAULT TRUE,                                     -- Indica si la asignación está activa (puede haber varias debido a reasignaciones de actividades)
+    unassigned_at TIMESTAMPTZ DEFAULT NULL,                             -- Fecha/hora de desasignación (en el caso que se desasigne la actividad)
+    
+    -- Campos para seguimiento de asignaciones por parte de los usuarios
     --assigned_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,  -- Usuario que asigna la actividad
-    assigned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,         -- Fecha/hora de asignacion
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,         -- Fecha/hora de asignacion (fecha de creación de la asignación)
     is_confirmed BOOLEAN DEFAULT FALSE,                                 -- Indica si la asignación fue confirmada por el usuario
     --confirmed_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL, -- Usuario que confirma la asignacion
-    confirmed_at TIMESTAMPTZ,                                           -- Fecha/hora de confirmacion de la asignación
+    confirmed_at TIMESTAMPTZ,                                           -- Fecha/hora de confirmacion de la asignación (fecha que modifican el is_confirmed a TRUE)
+    
     -- Campos para control de envíos
     send_status VARCHAR(20) DEFAULT 'pending' CHECK (send_status IN ('pending', 'sent', 'failed', 'confirmed')), -- Estado del envio a la antena
+    send_action TEXT CHECK (send_action IN ('add', 'update', 'delete', 'reasign')),                              -- Acción que se envió a la antena
     last_sent_at TIMESTAMPTZ DEFAULT NULL                               -- Fecha/hora del último envío exitoso (luego con el campo updated_at de la actividad)
-);
-
-CREATE TABLE activity_assignments (
-    id UUID PRIMARY KEY,
-    activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
-    antenna_id UUID NOT NULL REFERENCES antennas(id) ON DELETE CASCADE,
-    is_active BOOLEAN DEFAULT TRUE,
-    send_status TEXT CHECK (send_status IN ('pending', 'sent', 'confirmed', 'failed')) DEFAULT 'pending',
-    send_action TEXT CHECK (send_action IN ('add', 'update', 'delete')),
-    retry_count INTEGER DEFAULT 0,
-    last_sent_at TIMESTAMPTZ,
-    last_attempt_at TIMESTAMPTZ,
-    assigned_at TIMESTAMPTZ DEFAULT NOW(),
-    unassigned_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    retry_count INTEGER DEFAULT 0,                                      -- Contador de reintentos de envío
+    last_attempt_at TIMESTAMPTZ DEFAULT NULL,                           -- Fecha/hora del último
 );
 
 -- Tabla de reservaciones
