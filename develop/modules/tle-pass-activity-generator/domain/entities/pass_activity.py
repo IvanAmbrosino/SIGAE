@@ -8,6 +8,8 @@ class Status(str, Enum):
     UNASSIGNED = 'unassigned'
     PENDING = 'pending'
     AUTHORIZED = 'authorized'
+    LOADED= 'loaded'
+    CANCELED = 'canceled'
     PLANNED = 'planned'
     MODIFIED = 'modified'
     UPDATED = 'updated'

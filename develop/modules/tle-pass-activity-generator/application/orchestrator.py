@@ -37,6 +37,7 @@ class Orchestrator:
         self.pass_activity_repository = pass_activity_repository
 
     def handle_tle_message(self, value: dict):
+        """Procesa un mensaje TLE recibido, calcula pasadas, guarda actividades y asigna antenas automáticamente."""
         logger.info(f"TLE recibido: {json.dumps(value, default=str)}")
 
         tle = process_and_save_tle(self.tle_repository, value)
@@ -72,47 +73,158 @@ class Orchestrator:
                 continue
             valid_passes.append(pasada)
 
-        for pasada in valid_passes:
-            logger.info(f"Pasada guardada: {json.dumps(pasada.to_dict(), default=str)}")
+        # Guardar actividades y obtener los ids reales (insertados o actualizados)
+        valid_passes_db = self.pass_activity_repository.save_pass_activities(valid_passes)
 
-        self.pass_activity_repository.save_pass_activities(valid_passes)
+        # Log personalizado: distinguir entre insertada y actualizada
+        for pasada, pasada_db in zip(valid_passes, valid_passes_db):
+            original_id = getattr(pasada, '_original_id', pasada.id)
+            if original_id == pasada_db.id:
+                logger.info(f"Pasada guardada: {json.dumps(pasada_db.to_dict(), default=str)}")
+            else:
+                logger.info(f"Pasada actualizada por repetición de (satellite_id, orbit_number): {json.dumps(pasada_db.to_dict(), default=str)}")
+                
         # Asignar antena automáticamente a cada actividad
-        self.assign_antennas_to_activities(valid_passes)
+        self.assign_antennas_to_activities(valid_passes_db)
 
     
     
+    PRIORITY_ORDER = {
+        'critical': 4,
+        'high': 3,
+        'medium': 2,
+        'low': 1
+    }
+
     def assign_antennas_to_activities(self, activities: List[PassActivity]):
+        """Asigna antenas a una lista de actividades considerando compatibilidad y prioridades."""
         for activity in activities:
-            # Aca solo trae las antenas que son compatibles con el satellite de la tabla satellite_antenna_compatibility
             compatible_antennas = self.ground_station_repository.get_compatible_antennas(activity.satellite_id)
-
+            assigned = False
             for antenna in compatible_antennas:
-                # Verifica que la antenna no tenga otra actividad en ese rango horario
-                # Falta ver el tema de la prioridad
-                if self.pass_activity_repository.is_antenna_available(
+                # Obtener id de configuración para el par satélite-antena
+                config_id = self.ground_station_repository.get_activity_configuration_id(activity.satellite_id, antenna.id)
+                # Verifica disponibilidad y obtiene conflicto si existe
+                conflict = self.pass_activity_repository.get_antenna_conflict(
                     antenna_id=antenna.id,
                     start_time=activity.start_time,
                     end_time=activity.end_time
-                ):
-                    
+                )
+                if not conflict:
+                    # Asignar normalmente
                     self.pass_activity_repository.assign_antenna_to_activity(
                         activity_id=activity.id,
                         antenna_id=antenna.id,
-                        assigned_by=None  # Esto por ser automatico
+                        configuration_id=config_id
                     )
                     logger.info(
                         f"Antenna {antenna.name} asignada a actividad {activity.id} "
-                        f"desde {activity.start_time.isoformat()} hasta {activity.end_time.isoformat()}"
-                        )
+                        f"desde {activity.start_time.isoformat()} hasta {activity.end_time.isoformat()} (config: {config_id})"
+                    )
+                    assigned = True
                     break
-            else:
-                logger.warning(
-                    f"No se encontró antena disponible para la actividad {activity.id} "
-                    f"(rango: {activity.start_time.isoformat()} → {activity.end_time.isoformat()})"
+                else:
+                    # Hay conflicto, comparar prioridades usando PRIORITY_ORDER
+                    conflict_priority = conflict['priority']
+                    new_priority = activity.priority
+                    conflict_priority_value = self.PRIORITY_ORDER.get(conflict_priority, 0)
+                    new_priority_value = self.PRIORITY_ORDER.get(new_priority, 0)
+
+                    if new_priority_value > conflict_priority_value:
+                        # Reemplazar: desasignar la actividad en conflicto y asignar la nueva
+                        self.pass_activity_repository.unassign_activity(conflict['activity_id'])
+                        logger.info(f"Actividad {conflict['activity_id']} desasignada por prioridad inferior a {activity.id}")
+                        self.pass_activity_repository.assign_antenna_to_activity(
+                            activity_id=activity.id,
+                            antenna_id=antenna.id,
+                            configuration_id=config_id
+                        )
+                        logger.info(
+                            f"Antenna {antenna.name} asignada a actividad {activity.id} (reemplazó a {conflict['activity_id']}) "
+                            f"desde {activity.start_time.isoformat()} hasta {activity.end_time.isoformat()} (config: {config_id})"
+                        )
+                        # Intentar reubicar la actividad desplazada
+                        self._try_reassign_activity(conflict['activity_id'], conflict_priority)
+                        assigned = True
+                        break
+
+                    elif new_priority_value == conflict_priority_value:
+                        logger.warning(
+                            f"No se asigna actividad {activity.id} a {antenna.name} por prioridad igual a la existente ({conflict['activity_id']})"
+                        )
+                        continue
+                    else:
+                        # Prioridad menor, buscar otra antena
+                        continue
+                    
+            if not assigned:
+                # Si la actividad ya estaba registrada y no se pudo reubicar, eliminarla
+                if self.pass_activity_repository.is_activity_registered(activity.id):
+                    self.pass_activity_repository.delete_activity(activity.id)
+                    logger.warning(
+                        f"Actividad {activity.id} eliminada: no se encontró antena disponible para reubicar (rango: {activity.start_time.isoformat()} → {activity.end_time.isoformat()})"
+                    )
+                else:
+                    logger.warning(
+                        f"No se encontró antena disponible para la actividad {activity.id} "
+                        f"(rango: {activity.start_time.isoformat()} → {activity.end_time.isoformat()})"
+                    )
+
+    def _try_reassign_activity(self, activity_id, priority):
+        """Intenta reubicar una actividad desplazada por prioridad."""
+        
+        logger.info(f"Intentando reubicar actividad desplazada {activity_id} (prioridad {priority})")
+        # Obtener la actividad de la base de datos
+        activity = self.pass_activity_repository.get_activity_by_id(activity_id)
+        if not activity:
+            logger.warning(f"No se pudo reubicar la actividad {activity_id} porque no existe en la base de datos.")
+            return
+        
+        compatible_antennas = self.ground_station_repository.get_compatible_antennas(activity.satellite_id)
+
+        priority_value = self.PRIORITY_ORDER.get(priority, 0)
+
+        for antenna in compatible_antennas:
+            config_id = self.ground_station_repository.get_activity_configuration_id(activity.satellite_id, antenna.id)
+            conflict = self.pass_activity_repository.get_antenna_conflict(
+                antenna_id=antenna.id,
+                start_time=activity.start_time,
+                end_time=activity.end_time
+            )
+            if not conflict:
+                self.pass_activity_repository.assign_antenna_to_activity(
+                    activity_id=activity.id,
+                    antenna_id=antenna.id,
+                    configuration_id=config_id
                 )
+                logger.info(
+                    f"Actividad {activity.id} reubicada en antena {antenna.name} (config: {config_id}) "
+                    f"desde {activity.start_time.isoformat()} hasta {activity.end_time.isoformat()}"
+                )
+                return
+            else:
+                conflict_priority = conflict['priority']
+                conflict_priority_value = self.PRIORITY_ORDER.get(conflict_priority, 0)
+                if priority_value > conflict_priority_value:
+                    self.pass_activity_repository.unassign_activity(conflict['activity_id'])
+                    logger.info(f"Actividad {conflict['activity_id']} desasignada por prioridad inferior a {activity.id} (reubicación)")
+                    self.pass_activity_repository.assign_antenna_to_activity(
+                        activity_id=activity.id,
+                        antenna_id=antenna.id,
+                        configuration_id=config_id
+                    )
+                    logger.info(
+                        f"Actividad {activity.id} reubicada en antena {antenna.name} reemplazando a {conflict['activity_id']} (config: {config_id})"
+                    )
+                    self._try_reassign_activity(conflict['activity_id'], conflict['priority'])
+                    return
+        # Si no se pudo reubicar
+        self.pass_activity_repository.delete_activity(activity.id)
+        logger.warning(f"Actividad {activity.id} eliminada: no se pudo reubicar tras ser desplazada por prioridad.")
 
 
     def _can_propagate_pass(self, pasada : PassActivity, satellite, gs_config) -> bool:
+        """Devuelve True si la pasada puede propagarse según la configuración horaria y el satélite."""
         hour = pasada.max_elevation_time.hour
         if self._is_nighttime(hour, gs_config['night_start_hour'], gs_config['night_end_hour']):
             return satellite['allow_nighttime_propagation']
@@ -120,6 +232,7 @@ class Orchestrator:
             return satellite['allow_daytime_propagation']
 
     def _is_nighttime(self, hour: int, night_start: int, night_end: int) -> bool:
+        """Devuelve True si la hora indicada corresponde al horario nocturno configurado."""
         if night_start < night_end:
             return night_start <= hour < night_end
         return hour >= night_start or hour < night_end

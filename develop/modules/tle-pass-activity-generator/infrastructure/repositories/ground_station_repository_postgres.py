@@ -5,10 +5,12 @@ from domain.entities.antenna import Antenna, AntennaStatus
 
 
 class PostgresGroundStationRepository(GroundStationRepository):
+
     def __init__(self, db_config):
         self.db_config = db_config
 
     def get_ground_station_config(self, station_name: str = "Estación Córdoba") -> Optional[Dict]:
+        """Devuelve un dict con la configuración de la estación o None si no existe."""
         with get_db_connection(self.db_config) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
@@ -35,6 +37,7 @@ class PostgresGroundStationRepository(GroundStationRepository):
             }
 
     def get_station_coordinates(self, station_name: str = "Estación Córdoba") -> Optional[tuple]:
+        """Devuelve una tupla (lat, lon, alt) o None si no existe la estación."""
         with get_db_connection(self.db_config) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
@@ -53,6 +56,7 @@ class PostgresGroundStationRepository(GroundStationRepository):
         
         
     def get_compatible_antennas(self, satellite_id: str) -> List[Antenna]:
+        """Devuelve una lista de antenas compatibles con el satélite dado."""
         with get_db_connection(self.db_config) as conn:
             with conn.cursor() as cur:
                 cur.execute("""
@@ -76,3 +80,17 @@ class PostgresGroundStationRepository(GroundStationRepository):
             )
             for row in rows
         ]
+
+    def get_activity_configuration_id(self, satellite_id: str, antenna_id: str) -> Optional[str]:
+        """Devuelve el id de configuración activo para el par satélite-antena o None si no existe."""
+        with get_db_connection(self.db_config) as conn:
+            with conn.cursor() as cur:
+                cur.execute('''
+                    SELECT id FROM activity_configuration
+                    WHERE satellite_id = %s AND antenna_id = %s AND is_active = TRUE
+                    ORDER BY config_number ASC LIMIT 1
+                ''', (satellite_id, antenna_id))
+                row = cur.fetchone()
+        if row:
+            return row[0]
+        return None

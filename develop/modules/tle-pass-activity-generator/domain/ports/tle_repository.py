@@ -6,4 +6,5 @@ class TleRepository(ABC):
 
     @abstractmethod
     def save_tle_data(self, tle: TleData) -> None:
+        """Guarda los datos TLE en la base de datos o sistema correspondiente."""
         pass

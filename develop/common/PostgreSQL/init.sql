@@ -67,25 +67,19 @@ CREATE TABLE antennas (
     id VARCHAR(36) PRIMARY KEY,
     ground_station_id VARCHAR(36) REFERENCES ground_stations(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
+    code VARCHAR(50) UNIQUE NOT NULL,
     model VARCHAR(255),
     min_elevation DECIMAL(5, 2),
     operational_status VARCHAR(20) CHECK (operational_status IN ('operational', 'maintenance', 'out_of_service')),
     quality_level VARCHAR(10) CHECK (quality_level IN ('high', 'medium', 'low')),
     is_active BOOLEAN DEFAULT TRUE,
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
+    altitude DECIMAL(10, 2),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla de capacidades de antena
-CREATE TABLE antenna_capabilities (
-    id VARCHAR(36) PRIMARY KEY,
-    antenna_id VARCHAR(36) REFERENCES antennas(id) ON DELETE CASCADE,
-    frequency_band VARCHAR(10) CHECK (frequency_band IN ('S', 'X', 'Ku', 'Ka', 'other')),
-    min_frequency DECIMAL(10, 2),
-    max_frequency DECIMAL(10, 2),
-    polarization VARCHAR(10) CHECK (polarization IN ('linear', 'circular', 'dual')),
-    data_rate DECIMAL(10, 2)
-);
 
 -- Tabla de satélites
 CREATE TABLE satellites (
@@ -139,34 +133,49 @@ CREATE TABLE activities (
     max_elevation DECIMAL(5, 2),
     end_time TIMESTAMPTZ NOT NULL,
     duration INTEGER NOT NULL,
-    status VARCHAR(20) CHECK (status IN ('new', 'assigned', 'unassigned', 'pending', 'authorized', 'planned', 'modified', 'updated', 'critical')),
+    status VARCHAR(20) CHECK (status IN ('new', 'assigned', 'unassigned', 'pending', 'authorized', 'loaded', 'canceled', 'planned', 'modified', 'updated', 'critical')),
     priority VARCHAR(10) CHECK (priority IN ('critical', 'high', 'medium', 'low')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ,
     UNIQUE (satellite_id, orbit_number)
 );
 
--- Tabla de asignaciones de actividad
-CREATE TABLE activity_assignments (
+-- Tabla de configuracion de actividad
+CREATE TABLE activity_configuration (
     id VARCHAR(36) PRIMARY KEY,
-    activity_id VARCHAR(36) REFERENCES activities(id) ON DELETE CASCADE,
+    satellite_id VARCHAR(36) REFERENCES satellites(id) ON DELETE CASCADE,
     antenna_id VARCHAR(36) REFERENCES antennas(id) ON DELETE CASCADE,
-    assigned_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
-    assigned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_confirmed BOOLEAN DEFAULT FALSE,
-    confirmed_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,
-    confirmed_at TIMESTAMP
+    config_number INTEGER NOT NULL DEFAULT 1, -- En caso que haya mas de una configuracion por par satellite-antena
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE  -- Para activar/desactivar configuraciones
 );
 
--- Tabla de requisitos de actividad
-CREATE TABLE activity_requirements (
-    id VARCHAR(36) PRIMARY KEY,
+-- Tabla de asignaciones de actividad (permite multiples asignaciones por actividad pero solo una esta activa)
+CREATE TABLE activity_assignments (
+    id VARCHAR(36) PRIMARY KEY, 
     activity_id VARCHAR(36) REFERENCES activities(id) ON DELETE CASCADE,
-    frequency_band VARCHAR(10) CHECK (frequency_band IN ('S', 'X', 'Ku', 'Ka', 'other')),
-    min_frequency DECIMAL(10, 2),
-    max_frequency DECIMAL(10, 2),
-    polarization VARCHAR(10) CHECK (polarization IN ('linear', 'circular', 'dual'))
+    antenna_id VARCHAR(36) REFERENCES antennas(id) ON DELETE CASCADE,
+    configuration_id VARCHAR(36) NOT NULL REFERENCES activity_configuration(id) ON DELETE CASCADE,
+    
+    -- Campos que establece si la asignacion es la ultima activa o no, El campo unassigned_at indica si la actividad fue desasignada y permite tener la ultima
+    is_active BOOLEAN DEFAULT TRUE,                                     -- Indica si la asignación está activa (puede haber varias debido a reasignaciones de actividades)
+    unassigned_at TIMESTAMPTZ DEFAULT NULL,                             -- Fecha/hora de desasignación (en el caso que se desasigne la actividad)
+    
+    -- Campos para seguimiento de asignaciones por parte de los usuarios
+    --assigned_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL,  -- Usuario que asigna la actividad
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,         -- Fecha/hora de asignacion (fecha de creación de la asignación)
+    is_confirmed BOOLEAN DEFAULT FALSE,                                 -- Indica si la asignación fue confirmada por el usuario
+    --confirmed_by VARCHAR(36) REFERENCES users(id) ON DELETE SET NULL, -- Usuario que confirma la asignacion
+    confirmed_at TIMESTAMPTZ,                                           -- Fecha/hora de confirmacion de la asignación (fecha que modifican el is_confirmed a TRUE)
+    
+    -- Campos para control de envíos
+    send_status VARCHAR(20) DEFAULT 'pending' CHECK (send_status IN ('pending', 'sent', 'failed', 'confirmed')), -- Estado del envio a la antena
+    send_action TEXT CHECK (send_action IN ('add', 'update', 'delete', 'reasign')),                              -- Acción que se envió a la antena
+    last_sent_at TIMESTAMPTZ DEFAULT NULL,                               -- Fecha/hora del último envío exitoso (luego con el campo updated_at de la actividad)
+    retry_count INTEGER DEFAULT 0,                                      -- Contador de reintentos de envío
+    last_attempt_at TIMESTAMPTZ DEFAULT NULL                            -- Fecha/hora del último
 );
+
 
 -- Tabla de reservaciones
 CREATE TABLE reservations (
@@ -274,73 +283,32 @@ VALUES
 ('config-cba-001', 'station-cba-001', 72, 20, 6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP); 
 
 
+-- Nuevas antenas ETC para estación Córdoba
+INSERT INTO antennas (
+    id, ground_station_id, name, code, model, min_elevation, operational_status, quality_level, is_active, latitude, longitude, altitude, created_at, updated_at
+) VALUES
+('a1e1b1c1-d1e1-f1a1-b1c1-d1e1f1a1b1c1', 'station-cba-001', 'ANTENA 13', 'ANTDTRM01', 'Datron 13m', 5.00, 'operational', 'high', TRUE, -31.524986, -64.462739, 733.04, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('a2e2b2c2-d2e2-f2a2-b2c2-d2e2f2a2b2c2', 'station-cba-001', 'ANTENA 7.3', 'ANTDTRG01', 'Datron 7m', 10.00, 'operational', 'medium', TRUE, -31.524933, -64.46315, 730.84, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('a3e3b3c3-d3e3-f3a3-b3c3-d3e3f3a3b3c3', 'station-cba-001', 'ANTENA 13.5', 'ANTVSTM01', 'Viasat 11m', 5.00, 'operational', 'high', TRUE, -31.525334, -64.461689, 726.95, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('a4e4b4c4-d4e4-f4a4-b4c4-d4e4f4a4b4c4', 'station-cba-001', 'ANTENA 5.4', 'ANTVSTE01', 'Viasat 13m', 5.00, 'maintenance', 'high', FALSE, -31.523200, -64.460335, 723.00, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('a5e5b5c5-d5e5-f5a5-b5c5-d5e5f5a5b5c5', 'station-cba-001',  'ANTENA 6.1', 'ANTVSTFM01', 'Viasat 11m', 5.00, 'operational', 'high', TRUE, -31.522133, -64.459803, 720.49, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 
+INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id) VALUES
+  ('25544', 'a1e1b1c1-d1e1-f1a1-b1c1-d1e1f1a1b1c1'), -- ISS con ANTENA 13
+  ('27424', 'a2e2b2c2-d2e2-f2a2-b2c2-d2e2f2a2b2c2'), -- AQUA con ANTENA 7.3
+  ('39084', 'a3e3b3c3-d3e3-f3a3-b3c3-d3e3f3a3b3c3'), -- LANDSAT-8 con ANTENA 13.5
+  ('25338', 'a4e4b4c4-d4e4-f4a4-b4c4-d4e4f4a4b4c4'), -- NOAA 15 con ANTENA 5.4
+  ('25544', 'a5e5b5c5-d5e5-f5a5-b5c5-d5e5f5a5b5c5');   -- ISS con ANTENA 6.1
 
--- Antena S-Band para ISS
-INSERT INTO antennas (id, ground_station_id, name, model, min_elevation, operational_status, quality_level, created_at, updated_at)
-VALUES (
-  '00f4e120-1b7d-462f-838b-43f7b1f577b8',
-  'station-cba-001',
-  'Antena S-Band Alta',
-  'ASB-1000',
-  10.0,
-  'operational',
-  'high',
-  CURRENT_TIMESTAMP,
-  CURRENT_TIMESTAMP
-);
 
--- Antena X-Band para AQUA
-INSERT INTO antennas (id, ground_station_id, name, model, min_elevation, operational_status, quality_level, created_at, updated_at)
-VALUES (
-  'c8b44844-26c7-4c91-9f77-e0ee041a590d',
-  'station-cba-001',
-  'Antena X-Band Media',
-  'AXB-500',
-  15.0,
-  'operational',
-  'medium',
-  CURRENT_TIMESTAMP,
-  CURRENT_TIMESTAMP
-);
-
--- Capacidades de Antena S-Band (ISS)
-INSERT INTO antenna_capabilities (id, antenna_id, frequency_band, min_frequency, max_frequency, polarization, data_rate)
-VALUES (
-  '309d20f6-bcce-46ad-a331-6d3a2c544f9a',
-  '00f4e120-1b7d-462f-838b-43f7b1f577b8',
-  'S',
-  2000.00,
-  2200.00,
-  'circular',
-  100.0
-);
-
--- Capacidades de Antena X-Band (AQUA)
-INSERT INTO antenna_capabilities (id, antenna_id, frequency_band, min_frequency, max_frequency, polarization, data_rate)
-VALUES (
-  '4b0ad5bf-1a16-44a9-b773-8154ff5beead',
-  'c8b44844-26c7-4c91-9f77-e0ee041a590d',
-  'X',
-  8000.00,
-  8500.00,
-  'linear',
-  200.0
-);
-
--- ISS (S-band) compatible con antena S-band
-INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
-VALUES ('25544', '00f4e120-1b7d-462f-838b-43f7b1f577b8');
-
--- AQUA (X-band) compatible con antena X-band
-INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
-VALUES ('27424', 'c8b44844-26c7-4c91-9f77-e0ee041a590d');
-
--- LANDSAT-8 compatible con antena S-band
-INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
-VALUES ('39084', '00f4e120-1b7d-462f-838b-43f7b1f577b8');
-
--- NOAA 15 (X-band) compatible con antena X-band
-INSERT INTO satellite_antenna_compatibility (satellite_id, antenna_id)
-VALUES ('25338', 'c8b44844-26c7-4c91-9f77-e0ee041a590d');
+-- Insertar configuraciones de actividad para satélites/antena
+INSERT INTO activity_configuration (
+    id, satellite_id, antenna_id, config_number, description, is_active
+) VALUES
+  ('3089e006-d921-4d5c-94cc-44ce36cf4336', '25544', 'a1e1b1c1-d1e1-f1a1-b1c1-d1e1f1a1b1c1', 1, 'Config ISS - ANTENA 13 - modo normal', TRUE),
+  ('b6500f10-77c4-45ee-b50b-426d0f364ada', '25544', 'a1e1b1c1-d1e1-f1a1-b1c1-d1e1f1a1b1c1', 2, 'Config ISS - ANTENA 13 - modo backup', TRUE),
+  ('a45a4785-11a9-460b-81a2-91c597aac5fb', '27424', 'a2e2b2c2-d2e2-f2a2-b2c2-d2e2f2a2b2c2', 1, 'Config AQUA - ANTENA 7.3', TRUE),
+  ('2f29e6ac-7443-40a5-94aa-2212ba9176d6', '39084', 'a3e3b3c3-d3e3-f3a3-b3c3-d3e3f3a3b3c3', 1, 'Config LANDSAT-8 - ANTENA 13.5', TRUE),
+  ('06767b97-9993-4a90-b625-042100d9898a', '25338', 'a4e4b4c4-d4e4-f4a4-b4c4-d4e4f4a4b4c4', 1, 'Config NOAA 15 - ANTENA 5.4', TRUE),
+  ('d79f86e7-5724-4ea0-aff0-79ef813510f2', '25544', 'a5e5b5c5-d5e5-f5a5-b5c5-d5e5f5a5b5c5', 1, 'Config ISS - ANTENA 6.1', TRUE);

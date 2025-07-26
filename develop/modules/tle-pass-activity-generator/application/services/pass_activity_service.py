@@ -45,8 +45,8 @@ def compute_passes(
             orbit_number = compute_orbit_number(satellite, aos)
 
             pasadas.append(PassActivity(
-                satellite_id=tle.satellite_id,
-                orbit_number=orbit_number,
+                satellite_id=str(tle.satellite_id),
+                orbit_number=str(orbit_number),
                 start_time=aos,
                 max_elevation_time=max_elev_time.utc_datetime(),
                 end_time=los,

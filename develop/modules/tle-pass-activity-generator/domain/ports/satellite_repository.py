@@ -5,5 +5,5 @@ class SatelliteRepository(ABC):
 
     @abstractmethod
     def get_satellite_by_id(self, satellite_id: str) -> Optional[Dict]:
-        """Devuelve un dict con datos o None si no existe"""
+        """Devuelve un dict con los datos del satélite o None si no existe."""
         pass
