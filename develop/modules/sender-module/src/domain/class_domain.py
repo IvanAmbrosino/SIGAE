@@ -81,7 +81,7 @@ class Task():
             "task_id": self.original_task.get("id"),              # 'id': 'ASG007b'
             "satellite": self.activity.get("satellite_name"),     # 'satellite_name': 'SAOCOM-1B'
             "action": 'ADD',
-            "antenna_id": self.original_task.get("antenna_code"), # 'antenna_id': 'ANT003', 'antenna_code': 'ANTVSTM01', 'antenna_name': 'ANTENA 13.5'
+            "antenna_id": self.original_task.get("antenna_id"),   # 'antenna_id': 'ANT003', 'antenna_code': 'ANTVSTM01', 'antenna_name': 'ANTENA 13.5'
             "norad_id": self.activity.get("satellite_id"),        # 'satellite_id': '27424'
             "config_id": self.original_task.get("config_number"), # 'config_number': 9
             "start": self.activity.get("start_time"),             # 'start_time': '2025-07-16T16:16:00Z'
@@ -110,7 +110,7 @@ class Task():
 
 class Plann():
     """Clase PLAN"""
-    def __init__(self, plann: dict, source: str = "sender", plann_type: str = "PLANN", antenna_id: str = None):
+    def __init__(self, plann: list = None, tles: list = None, source: str = "SenderModule", plann_type: str = "PLANN", antenna_id: str = None):
         """
         Constructor of the PLAN class
         
@@ -123,13 +123,12 @@ class Plann():
         - "name": "tles", "type": {"type": "array", "default": [] }
         """
         self.plann = {
-            "id": plann.get("id"),
             "message_type": plann_type,
             "antenna_id": antenna_id,
             "timestamp": datetime.utcnow().isoformat(),
             "source": source,
-            "plan": plann.get("plan", []),
-            "tles": plann.get("tles", [])
+            "plan": plann if plann else [],
+            "tles": tles if tles else []
         }
 
     def to_dict(self):

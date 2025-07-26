@@ -7,6 +7,7 @@ app:
     plan_tle_type: "PLANTLE"
   min_hours_required: 1 # Horas minimas requeridas para la planificacion
   max_hours_required: 72 # Horas maximas requeridas para la planificacion
+  min_hours_tle_required: 5 # Horas minimas requeridas para enviar sin el TLE
 kafka:
   bootstrap_servers: "kafka-broker-1:9092,kafka-broker-2:9092,kafka-broker-3:9092"
   schema_registry_url: "http://schema-registry:8081"

@@ -187,6 +187,8 @@ Con las siguientes asignaciones:
 ``('ASG001', 'ACT001', 'ANT001', FALSE, TRUE, '2023-06-01 14:05:00', 'confirmed', '2023-06-01 14:05:00')`` --> Indica que esta tarea es la que funciona ahora
 ``('ASG002', 'ACT002', 'ANT001', TRUE, TRUE, NULL, 'pending', NULL)`` --> Esta es la nueva asignacion, que indica el **estado del envio del mensaje DELETE**
 
+O podemos usar el campo `is_active` de la asignacion, ya que ninguna actividad cancelada deberia tener asignaciones activas.
+
 Al finalizar la Reasignacion, los valores son los siguientes
 
 ``('ASG001', 'ACT001', 'ANT001', FALSE, TRUE, '2023-06-01 14:05:00', 'confirmed', '2023-06-01 14:05:00')`` --> Historial de asignacion

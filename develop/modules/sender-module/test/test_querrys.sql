@@ -25,7 +25,8 @@ SELECT
     ac.config_number AS config_number,
     act.updated_at,
     aa.last_sent_at,
-    aa.send_status
+    aa.send_status,
+    aa.is_active
 FROM activities act
 JOIN activity_assignments aa ON act.id = aa.activity_id -- El primer filtro es si tiene una asignacion
 JOIN antennas ant ON aa.antenna_id = ant.id             -- Obtenemos los datos de la antena
@@ -40,9 +41,8 @@ WHERE
     act.end_time < NOW() + INTERVAL '72 hour'
     AND act.start_time > NOW() - INTERVAL '3 year'
     -- Filtro de estado de la actividad y asignacion
-    AND act.status IN ('authorized', 'canceled')
-    AND aa.is_confirmed = TRUE
-    AND aa.send_status IN ('pending', 'failed', 'confirmed')
+    AND (act.status = 'canceled' and aa.send_status IN ('confirmed') and aa.is_active = TRUE)
+    OR (act.status IN ('authorized') AND aa.is_confirmed = TRUE AND aa.send_status IN ('pending', 'failed', 'confirmed'))
 
 ORDER BY act.id, aa.is_active DESC, aa.assigned_at DESC
 
@@ -77,12 +77,12 @@ INSERT INTO activity_assignments (id, activity_id, antenna_id, is_active, assign
 -- Asignaciones para actividades de UPDATE (ya enviadas pero modificadas)
 ('ASG003',  'ACT013', 'ANT001', FALSE,  NOW() - INTERVAL '2 hours',     TRUE,       NOW() - INTERVAL '1 hour',      'confirmed'),
 ('ASG004',  'ACT013', 'ANT001', FALSE,  NOW() - INTERVAL '3 hours',     TRUE,       NOW() - INTERVAL '2 hours',     'confirmed'),
-('ASG011',  'ACT013', 'ANT001', TRUE,   NOW() - INTERVAL '3 hours',     TRUE,       NOW() - INTERVAL '2 hours',     'pending'),
+('ASG011',  'ACT013', 'ANT001', TRUE,   NOW() - INTERVAL '3 minutes',   TRUE,       NOW() - INTERVAL '2 hours',     'pending'),
 -- Asignaciones para actividades de DELETE (canceladas)
-('ASG005',  'ACT015', 'ANT002', FALSE,  NOW() - INTERVAL '4 hours',     TRUE,       NOW() - INTERVAL '3 hours',     'confirmed'),
-('ASG006',  'ACT015', 'ANT002', TRUE,   NOW() - INTERVAL '5 hours',     TRUE,       NOW() - INTERVAL '4 hours',     'pending'),   ---> se enviará a ANT002
-('ASG012',  'ACT016', 'ANT004', FALSE,  NOW() - INTERVAL '4 hours',     TRUE,       NOW() - INTERVAL '3 hours',     'confirmed'),
-('ASG013',  'ACT016', 'ANT004', TRUE,   NOW() - INTERVAL '5 hours',     TRUE,       NOW() - INTERVAL '4 hours',     'confirmed'), ---> ya fue enviado a ANT004
+('ASG005',  'ACT015', 'ANT002', FALSE,  NOW() - INTERVAL '5 hours',     TRUE,       NOW() - INTERVAL '3 hours',     'confirmed'),
+('ASG006',  'ACT015', 'ANT002', FALSE,  NOW() - INTERVAL '4 minutes',   TRUE,       NOW() - INTERVAL '4 hours',     'pending'),   ---> NO HACE NADA
+('ASG012',  'ACT016', 'ANT004', FALSE,  NOW() - INTERVAL '5 hours',     TRUE,       NOW() - INTERVAL '3 hours',     'confirmed'),
+('ASG013',  'ACT016', 'ANT004', TRUE,   NOW() - INTERVAL '4 minutes',   TRUE,       NOW() - INTERVAL '4 hours',     'confirmed'), ---> ya fue enviado a ANT004
 -- Asignaciones para actividades de REASSIGN (historial de asignaciones)
 ('ASG007a', 'ACT017', 'ANT001', FALSE,  NOW() - INTERVAL '6 hours',     TRUE,       NOW() - INTERVAL '5 hours',     'confirmed'), ---> Antigua asignación (inactiva)
 ('ASG007b', 'ACT017', 'ANT003', TRUE,   NOW() - INTERVAL '10 minutes',  TRUE,       NOW() - INTERVAL '5 minutes',   'pending'),   ---> Nueva asignación (activa)
@@ -104,3 +104,5 @@ INSERT INTO activity_configuration (id, satellite_id, antenna_id, config_number,
 ('AC061', '39084', 'ANT002', 2, 'Configuración estándar para Landsat8', TRUE),
 ('AC071', '39084', 'ANT003', 3, 'Configuración estándar para Landsat8', TRUE),
 ('AC081', '39084', 'ANT004', 4, 'Configuración estándar para Landsat8', TRUE);
+
+delete from activity_assignments

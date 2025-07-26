@@ -1,6 +1,5 @@
 """Modulo encargado de obtener el listado de planificacion para enviar"""
 import logging
-from pprint import pprint
 from infraestructure.config_manager import ConfigManager # pylint: disable=import-error
 from infraestructure.database_manager import DatabaseManager # pylint: disable=import-error
 from application.make_message import MakeMessage # pylint: disable=import-error
@@ -40,10 +39,9 @@ class PlanningManager():
             self.logger.info("No hay actividades clasificadas para enviar")
             return
 
-        # Enviamos los mensajes a las antenas
-        #for antenna, messages in self.activities_by_antenna.items():
-        #    for message in messages:
-        #        self.make_message.send_message(antenna, message)
+        # Creamos los mensajes finales para enviar
+        self.logger.info("Armando mensajes a enviar")
+        self.make_message.make_plann_messages(self.activities_by_antenna)
 
     def get_planning(self):
         """Obtiene la planificacion de actividades a enviar"""
@@ -84,41 +82,47 @@ class PlanningManager():
             asignaciones = data['asignaciones'] # TASK
             datos_actividad = data['datos']     # ACTIVITY
 
+            asignaciones_ordenadas = sorted(asignaciones, key=lambda x: x['assigned_at'], reverse=True) # Ordenar por 'assigned_at' de forma descendente
+            ultima_asignacion = asignaciones_ordenadas[0] if len(asignaciones_ordenadas) >= 1 else None
+            penultima_asignacion = asignaciones_ordenadas[1] if len(asignaciones_ordenadas) >= 2 else None
+
+            if ultima_asignacion["antenna_code"] not in self.activities_by_antenna:
+                self.activities_by_antenna[ultima_asignacion["antenna_code"]] = []
+
+            # ---------- Actividades canceladas son DELETE ------------- #
+            if datos_actividad['status'] == 'canceled':
+                self.logger.debug("Entra la actividad %s que se encuentra CANCELADA, con 'send_status' = %s, is_confirmed = %s, is_active = %s",
+                                 actividad_id, ultima_asignacion['send_status'],ultima_asignacion["is_confirmed"],ultima_asignacion["is_active"])
+                if (
+                ultima_asignacion['send_status'] == 'confirmed' # Ninguna actividad cancelada deberia tener asignaciones activas.
+                and ultima_asignacion["is_confirmed"]           # Con esta logica arrelgamos el problema pero no podemos validar el ACK
+                and ultima_asignacion["is_active"]):
+                    message_delete = self.make_message.make_message_delete(datos_actividad, ultima_asignacion) # Creamos el mensaje a enviar
+                    self.logger.debug("Mensaje DEL creado para la antena %s: %s", ultima_asignacion["antenna_code"], message_delete)
+                    self.activities_by_antenna[ultima_asignacion["antenna_code"]].append(message_delete) # Agregamos a la lista de mensajes para las diferentes antenas
+                    clasificacion['DELETE'].append(message_delete)
+                    continue
+
             if len(asignaciones) == 1:
-                ultima_asignacion = asignaciones[0]
-                if ultima_asignacion["antenna_code"] not in self.activities_by_antenna:
-                    self.activities_by_antenna[ultima_asignacion["antenna_code"]] = []
+
                 # ---------- Actividades nuevas son ADD ------------- #
                 if datos_actividad['status'] == 'authorized':
+                    self.logger.debug("Entra la actividad %s que se encuentra AUTORIZADA, con 'send_status' = %s, is_confirmed = %s, is_active = %s",
+                                 actividad_id, ultima_asignacion['send_status'],ultima_asignacion["is_confirmed"],ultima_asignacion["is_active"])
                     if ultima_asignacion['send_status'] == 'pending' and ultima_asignacion["is_confirmed"] and ultima_asignacion["is_active"]:
                         message_add = self.make_message.make_message_add(datos_actividad, ultima_asignacion) # Creamos el mensaje a enviar
+                        self.logger.debug("Mensaje ADD creado para la antena %s: %s", ultima_asignacion["antenna_code"], message_add)
                         self.activities_by_antenna[ultima_asignacion["antenna_code"]].append(message_add) # Agregamos a la lista de mensajes para las diferentes antenas
                         clasificacion['ADD'].append(message_add)
                         continue
 
             elif len(asignaciones) > 1:
 
-                asignaciones_ordenadas = sorted(asignaciones, key=lambda x: x['assigned_at'], reverse=True) # Ordenar por 'assigned_at' de forma descendente
-                ultima_asignacion = asignaciones_ordenadas[0] if len(asignaciones_ordenadas) >= 1 else None
-                penultima_asignacion = asignaciones_ordenadas[1] if len(asignaciones_ordenadas) >= 2 else None
-                if ultima_asignacion["antenna_code"] not in self.activities_by_antenna:
-                    self.activities_by_antenna[ultima_asignacion["antenna_code"]] = []
-
-                # ---------- Actividades canceladas son DELETE ------------- #
-                if datos_actividad['status'] == 'canceled':
-                    if (
-                    ultima_asignacion['send_status'] == 'pending'
-                    and ultima_asignacion["is_confirmed"]
-                    and ultima_asignacion["is_active"]
-                    and penultima_asignacion
-                    and penultima_asignacion['send_status'] == 'confirmed'
-                    and not penultima_asignacion["is_active"]):
-                        message_delete = self.make_message.make_message_delete(datos_actividad, ultima_asignacion) # Creamos el mensaje a enviar
-                        self.activities_by_antenna[ultima_asignacion["antenna_code"]].append(message_delete) # Agregamos a la lista de mensajes para las diferentes antenas
-                        clasificacion['DELETE'].append(message_delete)
-                        continue
-
                 if datos_actividad['status'] == 'authorized':
+                    self.logger.debug("Entra la actividad %s que se encuentra AUTORIZADA, con 'send_status' = %s, is_confirmed = %s, is_active = %s",
+                                 actividad_id, ultima_asignacion['send_status'],ultima_asignacion["is_confirmed"],ultima_asignacion["is_active"])
+                    self.logger.debug("Ultima asignacion: %s", ultima_asignacion)
+                    self.logger.debug("Penultima asignacion: %s", penultima_asignacion)
                     if (
                     ultima_asignacion['send_status'] == 'pending'
                     and ultima_asignacion["is_confirmed"]
@@ -128,27 +132,33 @@ class PlanningManager():
                     and not penultima_asignacion["is_active"]):
                         # ---------- Actividades REASIGNADAS o MODIFICADAS ------------- #
                         #if ultima_asignacion.antenna != penultima_asignacion["antenna"] or ultima_asignacion.antenna == penultima_asignacion["antenna"]: # REASIGNACION en diferente antena
-                        message_reassign = self.make_message.make_message_add(datos_actividad, ultima_asignacion) # Creamos el mensaje a enviar
+                        message_update = self.make_message.make_message_add(datos_actividad, ultima_asignacion) # Creamos el mensaje a enviar
                         message_delete = self.make_message.make_message_delete(datos_actividad, penultima_asignacion) # Creamos el mensaje a enviar
+                        self.logger.debug("Mensaje ADD creado para la antena %s: %s", ultima_asignacion["antenna_code"], message_update)
+                        self.logger.debug("Mensaje DEL creado para la antena %s: %s", penultima_asignacion["antenna_code"], message_delete)
                         if penultima_asignacion["antenna_code"] not in self.activities_by_antenna:
                             self.activities_by_antenna[penultima_asignacion["antenna_code"]] = []
-                        self.activities_by_antenna[ultima_asignacion["antenna_code"]].append(message_delete) # Agregamos a la lista de mensajes para las diferentes antenas
+                        self.activities_by_antenna[ultima_asignacion["antenna_code"]].append(message_update) # Agregamos a la lista de mensajes para las diferentes antenas
+                        self.activities_by_antenna[penultima_asignacion["antenna_code"]].append(message_delete) # Agregamos a la lista de mensajes para las diferentes antenas
                         if ultima_asignacion["antenna_code"] != penultima_asignacion["antenna_code"]:
-                            clasificacion['REASSIGN'].append(message_reassign)
+                            clasificacion['REASSIGN'].append(message_update)
                         else:
-                            clasificacion['UPDATE'].append(message_reassign)
+                            clasificacion['UPDATE'].append(message_update)
                         clasificacion['DELETE'].append(message_delete)
+                        continue
 
             else:
                 self.logger.warning(f"La actividad {actividad_id} no tiene asignaciones")
                 continue
 
         # Test de salida
-        print(" --------------------- Envio de actividades --------------------- ")
+        self.logger.info(" --------------------- Envio de actividades --------------------- ")
         for antenna, messages in self.activities_by_antenna.items():
-            print(f"Antenna: {antenna}")
-            pprint(messages)
-        print(" --------------------- Actividades por antena --------------------- ")
-        pprint(self.activities_by_antenna)
-        print(" --------------------- Clasificacion de actividades --------------------- ")
-        pprint(clasificacion)
+            self.logger.info(f"------- Antenna: {antenna} -----------")
+            for message in messages:
+                self.logger.info(" - %s",message)
+        self.logger.info(" --------------------- Clasificacion de actividades --------------------- ")
+        for clasificacion, messages in clasificacion.items():
+            self.logger.info(f"------- Clasificacion: {clasificacion} -------")
+            for message in messages:
+                self.logger.info(" - %s",message)

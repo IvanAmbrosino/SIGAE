@@ -66,21 +66,22 @@ class SenderModule:
         logger.info("Iniciando hilo de envio de mensajes: SENDER-THREAD")
         for message, message_value in sender_kafka_adapter.get_message():
             print("Llegada de nuevo mensaje: ",message_value)
-            #try:
-            if message_value['event_type'] == "NEWPLANN":
-                plan = self.planning_manager.send_planning()        # Obtenemos la lista de planificacion a enviar
-                print("Planificacion a enviar: ", plan)
-                #message_to_send = MakeMessage().make_message(plan)   # Armamos el mensaje adecuado con toda la informacion
-                #sender_kafka_adapter.send_message(topic= 'PLANN',
-                #                                  key= 'PLANN',
-                #                                  value= message_to_send,
-                #                                  schema_type= 'sender_plann'
-                #                                  )
-                #with PENDING_ACK_LOCK:
-                #    PENDING_ACK[message_to_send["id"]] = {"timestamp": time.time(), "retries": 0}
-            #sender_kafka_adapter.commmit_message(message=message)
-            #except Exception as e: # pylint: disable=broad-exception-caught
-            #    logger.error("Fatal error en el proceso principal: %s",e)
+            try:
+                if message_value['event_type'] == "NEWPLANN":
+                    list_planning_to_send = self.planning_manager.send_planning() # Obtenemos la lista de planificacion a enviar
+                    logger.info("Planificacion a enviar: %s", list_planning_to_send)
+                    for planning in list_planning_to_send:
+                        sender_kafka_adapter.send_message(topic= 'PLANN',
+                                                        key= 'PLANN',
+                                                        value= planning,
+                                                        schema_type= 'sender_plann'
+                                                        )
+                        if self.app_config["ack_check"]:
+                            with PENDING_ACK_LOCK:
+                                PENDING_ACK[planning["id"]] = {"timestamp": time.time(), "retries": 0}
+                sender_kafka_adapter.commmit_message(message=message)
+            except Exception as e: # pylint: disable=broad-exception-caught
+                logger.error("Fatal error en el proceso principal: %s",e)
 
     def ack_listener_thread(self):
         """Hilo que escucha los ACK de los mensajes enviados."""
@@ -128,7 +129,7 @@ class SenderModule:
         THREADS[name] = t
 
     def load_logger(self) -> None:
-        """Load logger configuration."""
+        """Load logger configuration.""" ## CENTRALIZAR LOGS PARA EVITAR PASARLOS POR PARAMETRO
         try:
             if not logger.handlers:
                 if self.logs_config['log_level']:

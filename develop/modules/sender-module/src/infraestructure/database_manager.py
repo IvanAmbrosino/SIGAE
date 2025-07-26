@@ -110,9 +110,8 @@ class DatabaseManager:
                 act.end_time < NOW() + INTERVAL '%s hour'
                 AND act.start_time > NOW() - INTERVAL '%s year'
                 -- Filtro de estado de la actividad y asignacion
-                AND act.status IN ('authorized','canceled')
-                AND aa.is_confirmed = TRUE
-                AND aa.send_status IN ('pending', 'failed', 'confirmed')
+                AND (act.status = 'canceled' and aa.send_status IN ('confirmed') and aa.is_active = TRUE)
+                OR (act.status IN ('authorized') AND aa.is_confirmed = TRUE AND aa.send_status IN ('pending', 'failed', 'confirmed'))
 
             ORDER BY act.id, aa.is_active DESC, aa.assigned_at DESC
         """
