@@ -1,10 +1,10 @@
 """Module responsible for managing mounted configurations and environment variables"""
 import os
-import yaml
 from pathlib import Path
+import yaml
 
-DEFAULT_CONFIG_PATH = Path("/app/config/default_config.yaml")
-MOUNTED_CONFIG_PATH = Path("/app/config/config.yaml")
+DEFAULT_CONFIG_PATH = Path("/app/config/default_config.yml")
+MOUNTED_CONFIG_PATH = Path("/app/config/config.yml")
 TRANSLATION_FILE = Path("/app/config/name_translation.csv")
 
 # Mapeo ENV -> Claves en el dict final

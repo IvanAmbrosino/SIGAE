@@ -1,22 +1,31 @@
 """Clase que crea mensajes para el modulo sender."""
-from domain.class_domain import Task, Plann, TLE
+import logging
+from domain.class_domain import Task, Plann, TLE # pylint: disable=import-error
 
 class MakeMessage:
     """Class to create messages for the sender module."""
+    def __init__(self, logger: logging):
+        self.logger = logger
 
     def make_message_add(self, activity: dict, task: dict) -> dict:
         """Crea un mensaje de tipo ADD para la planificacion."""
-        maker_task = Task(activity, task).task_add()
+        self.logger.debug("Armado de mensaje ADD con: \n Activity: %s \n Task: %s", activity, task)
+        maker_task = Task(activity, task)
+        maker_task.task_add()
         return maker_task.to_dict()
 
     def make_message_delete(self, activity: dict, task: dict) -> dict:
-        """Crea un mensaje de tipo ADD para la planificacion."""
-        maker_task = Task(activity, task).task_delete()
+        """Crea un mensaje de tipo DELETE para la planificacion."""
+        self.logger.debug("Armado de mensaje DELETE con: \n Activity: %s \n Task: %s", activity, task)
+        maker_task = Task(activity, task)
+        maker_task.task_delete()
         return maker_task.to_dict()
 
     def make_message_purgue(self, activity: dict, task: dict) -> dict:
-        """Crea un mensaje de tipo ADD para la planificacion."""
-        maker_task = Task(activity, task).task_purge()
+        """Crea un mensaje de tipo PURGE para la planificacion."""
+        self.logger.debug("Armado de mensaje PURGE con: \n Activity: %s \n Task: %s", activity, task)
+        maker_task = Task(activity, task)
+        maker_task.task_purge()
         return maker_task.to_dict()
 
     def make_plann_message(self, plan: dict) -> dict:

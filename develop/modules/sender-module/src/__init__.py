@@ -8,7 +8,6 @@ import time
 from infraestructure.config_manager import ConfigManager # pylint: disable=import-error
 from infraestructure.kafka_adapter import KafkaConnector # pylint: disable=import-error
 from application.planning_manager import PlanningManager # pylint: disable=import-error
-from application.make_message import MakeMessage # pylint: disable=import-error
 
 PENDING_ACK = {}
 PENDING_ACK_LOCK = threading.Lock()
@@ -65,19 +64,21 @@ class SenderModule:
         topic = self.kafka_config["topic"]["event_topic"]
         sender_kafka_adapter = KafkaConnector(self.kafka_config, topic, logger)
         logger.info("Iniciando hilo de envio de mensajes: SENDER-THREAD")
-        for message, message_value in sender_kafka_adapter.get_message(topic= 'EVENTS'):
+        for message, message_value in sender_kafka_adapter.get_message():
+            print("Llegada de nuevo mensaje: ",message_value)
             #try:
-            if message_value['type'] == "NEWPLANN":
-                plan = self.planning_manager.obtener_proxima_planificacion() # Obtenemos la lista de planificacion a enviar
-                message_to_send= MakeMessage().make_message(plan)            # Armamos el mensaje adecuado con toda la informacion
-                sender_kafka_adapter.send_message(topic= 'PLANN',
-                                                  key= 'PLANN',
-                                                  value= message_to_send,
-                                                  schema_type= 'sender_plann'
-                                                  )
-                with PENDING_ACK_LOCK:
-                    PENDING_ACK[message_to_send["id"]] = {"timestamp": time.time(), "retries": 0}
-            sender_kafka_adapter.commmit_message(message=message)
+            if message_value['event_type'] == "NEWPLANN":
+                plan = self.planning_manager.send_planning()        # Obtenemos la lista de planificacion a enviar
+                print("Planificacion a enviar: ", plan)
+                #message_to_send = MakeMessage().make_message(plan)   # Armamos el mensaje adecuado con toda la informacion
+                #sender_kafka_adapter.send_message(topic= 'PLANN',
+                #                                  key= 'PLANN',
+                #                                  value= message_to_send,
+                #                                  schema_type= 'sender_plann'
+                #                                  )
+                #with PENDING_ACK_LOCK:
+                #    PENDING_ACK[message_to_send["id"]] = {"timestamp": time.time(), "retries": 0}
+            #sender_kafka_adapter.commmit_message(message=message)
             #except Exception as e: # pylint: disable=broad-exception-caught
             #    logger.error("Fatal error en el proceso principal: %s",e)
 
@@ -86,7 +87,7 @@ class SenderModule:
         topic = self.kafka_config["topic"]["ack_topic"]
         ack_kafka_adapter = KafkaConnector(self.kafka_config, topic, logger)
         logger.info("Iniciando hilo de recepcion de mensajes: ACK-LISTENER-THREAD")
-        for message, message_value in ack_kafka_adapter.get_message(topic= 'ACK'):
+        for message, message_value in ack_kafka_adapter.get_message():
             with PENDING_ACK_LOCK:
                 if message_value["id"] in PENDING_ACK:
                     del PENDING_ACK[message_value["id"]]

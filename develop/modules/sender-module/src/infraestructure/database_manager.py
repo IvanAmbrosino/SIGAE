@@ -1,7 +1,7 @@
 """Adaptador de PostgreSQL"""
 from datetime import datetime
 from typing import List, Dict, Optional
-import psycopg2
+import psycopg2 # pylint: disable=import-error
 
 class DatabaseManager:
     """Clase adaptadora de PosgreSQL"""
@@ -40,7 +40,6 @@ class DatabaseManager:
             if fetch:
                 columns = [desc[0] for desc in cursor.description]
                 results = cursor.fetchall()
-                print(results)
                 return [dict(zip(columns, row)) for row in results]
 
             self.connection.commit()
@@ -82,6 +81,7 @@ class DatabaseManager:
                 act.priority,
                 -- Campos de la asignacion
                 aa.id AS task_id,
+                aa.is_active,
                 aa.antenna_id,
                 aa.is_confirmed,
                 aa.assigned_at,

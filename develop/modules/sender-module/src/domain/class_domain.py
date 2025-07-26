@@ -35,6 +35,7 @@ class Activities():
                     }
                 self.activities[activity['activity_id']]['asignaciones'].append({
                     'id': activity['task_id'],
+                    'is_active': activity['is_active'],
                     'antenna_id': activity['antenna_id'],
                     'antenna_code': activity['antenna_code'],
                     'antenna_name': activity['antenna_name'],
@@ -77,29 +78,29 @@ class Task():
         
         """
         self.task = {
-            "task_id": self.original_task.get("task_id"),
-            "satellite": self.activity.get("satellite_name"),
+            "task_id": self.original_task.get("id"),              # 'id': 'ASG007b'
+            "satellite": self.activity.get("satellite_name"),     # 'satellite_name': 'SAOCOM-1B'
             "action": 'ADD',
-            "antenna_id": self.original_task.get("antenna_id"),
-            "norad_id": self.original_task.get("norad_id"),
-            "config_id": self.original_task.get("config_id"),
-            "start": self.original_task.get("start"),
-            "end": self.original_task.get("end"),
-            "prepass_seconds": self.original_task.get("prepass_seconds", 0),
-            "postpass_seconds": self.original_task.get("postpass_seconds", 0)
+            "antenna_id": self.original_task.get("antenna_code"), # 'antenna_id': 'ANT003', 'antenna_code': 'ANTVSTM01', 'antenna_name': 'ANTENA 13.5'
+            "norad_id": self.activity.get("satellite_id"),        # 'satellite_id': '27424'
+            "config_id": self.original_task.get("config_number"), # 'config_number': 9
+            "start": self.activity.get("start_time"),             # 'start_time': '2025-07-16T16:16:00Z'
+            "end": self.activity.get("end_time"),                 # 'end_time': '2025-07-16T16:17:00Z'
+            "prepass_seconds": self.original_task.get("prepass_seconds", 120),
+            "postpass_seconds": self.original_task.get("postpass_seconds", 60)
         }
 
     def task_delete(self):
         """Create a task for adding a new activity."""
         self.task = {
-            "task_id": self.original_task.get("task_id"),
+            "task_id": self.original_task.get("id"),
             "action": 'DELETE'
         }
 
     def task_purge(self):
         """Create a task for purging an activity."""
         self.task = {
-            "task_id": self.original_task.get("task_id"),
+            "task_id": self.original_task.get("id"),
             "action": 'PURGE'
         }
 

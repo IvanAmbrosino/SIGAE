@@ -54,8 +54,8 @@ class PostTle():
         self.producer.flush(timeout=5)  # espera a que se envíen todos los mensajes pendientes
 
 if __name__ == "__main__":
-    tle = True
-    plann = True
+    tle = False
+    plann = False
     if tle:
         PT = PostTle()
         TLE_SCHEMA = """{
@@ -156,3 +156,29 @@ if __name__ == "__main__":
                             }
         pprint.pprint(planificacion_random)
         PT.kafka_producer(message= planificacion_random, topic= 'PLANN')
+    
+    event = True
+    if event:
+        PT = PostTle()
+        PLANN_SCHEMA = """{
+                        "type": "record",
+                        "name": "EventMessage",
+                        "namespace": "sigae.planificacion",
+                        "doc": "Mensaje para los eventos del sistema",
+                        "fields": [
+                            { "name": "event_type","type": "string" },
+                            { "name": "destination", "type": "string" },
+                            { "name": "timestamp", "type": "string" },
+                            { "name": "source", "type": "string" }
+                        ]
+                        }
+                        """
+        PT.conect_kafka_producer(schema=PLANN_SCHEMA)
+        planificacion_random = {
+                                "event_type": "NEWPLANN",
+                                "destination": "SenderModule",
+                                "timestamp": "2025-07-11T14:00:00Z",
+                                "source": "planificador_automatico"
+                                }
+        pprint.pprint(planificacion_random)
+        PT.kafka_producer(message= planificacion_random, topic= 'EVENTS')

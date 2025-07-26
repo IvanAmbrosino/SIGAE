@@ -10,7 +10,7 @@ from infraestructure.config_manager import ConfigManager
 
 class KafkaConnector:
     """Clase que maneja las conexiones a kafka"""
-    def __init__(self, kafka_config: dict, topic: str, logger:logging, consumer: bool, producer: bool):
+    def __init__(self, kafka_config: dict, topic: str, logger:logging, consumer: bool = True, producer: bool = True):
         self.logger             = logger
         self.config             = kafka_config
         self.create_consumer    = consumer
@@ -102,7 +102,7 @@ class KafkaConnector:
 
     def suscribe_topics(self):
         """Funcion que se suscribe a los topicos disponibles en el broker"""
-        list_topics = self.topic
+        list_topics = [self.topic]
         self.consumer.subscribe(list_topics)
 
     def get_message(self):

@@ -1,0 +1,20 @@
+2025-07-26 03:53:00,804 - 1 - Main -                        95 - INFO - Connected to Kafka successfully.
+2025-07-26 03:53:00,830 - 1 - Main -                        67 - INFO - Iniciando hilo de envio de mensajes: SENDER-THREAD
+2025-07-26 03:53:42,710 - 1 - Main -                        117 - DEBUG - NEW MESSAGE: {'event_type': 'NEWPLANN', 'destination': 'SenderModule', 'timestamp': '2025-07-11T14:00:00Z', 'source': 'planificador_automatico'}
+2025-07-26 03:53:42,712 - 1 - Main -                        28 - INFO - Iniciando proceso de envio de planificacion
+2025-07-26 03:53:42,712 - 1 - Main -                        50 - INFO - Obteniendo actividades para enviar
+2025-07-26 03:53:42,727 - 1 - Main -                        34 - INFO - Armando listado de actividades estructurado
+2025-07-26 03:54:00,085 - 1 - Main -                        117 - DEBUG - NEW MESSAGE: {'event_type': 'NEWPLANN', 'destination': 'SenderModule', 'timestamp': '2025-07-11T14:00:00Z', 'source': 'planificador_automatico'}
+2025-07-26 03:54:00,086 - 1 - Main -                        28 - INFO - Iniciando proceso de envio de planificacion
+2025-07-26 03:54:00,086 - 1 - Main -                        50 - INFO - Obteniendo actividades para enviar
+2025-07-26 03:54:00,095 - 1 - Main -                        34 - INFO - Armando listado de actividades estructurado
+2025-07-26 03:58:04,922 - 1 - Main -                        95 - INFO - Connected to Kafka successfully.
+2025-07-26 03:58:04,946 - 1 - Main -                        67 - INFO - Iniciando hilo de envio de mensajes: SENDER-THREAD
+2025-07-26 03:58:45,686 - 1 - Main -                        117 - DEBUG - NEW MESSAGE: {'event_type': 'NEWPLANN', 'destination': 'SenderModule', 'timestamp': '2025-07-11T14:00:00Z', 'source': 'planificador_automatico'}
+2025-07-26 03:58:45,686 - 1 - Main -                        28 - INFO - Iniciando proceso de envio de planificacion
+2025-07-26 03:58:45,686 - 1 - Main -                        50 - INFO - Obteniendo actividades para enviar
+2025-07-26 03:58:45,694 - 1 - Main -                        34 - INFO - Armando listado de actividades estructurado
+2025-07-26 03:59:06,162 - 1 - Main -                        117 - DEBUG - NEW MESSAGE: {'event_type': 'NEWPLANN', 'destination': 'SenderModule', 'timestamp': '2025-07-11T14:00:00Z', 'source': 'planificador_automatico'}
+2025-07-26 03:59:06,164 - 1 - Main -                        28 - INFO - Iniciando proceso de envio de planificacion
+2025-07-26 03:59:06,164 - 1 - Main -                        50 - INFO - Obteniendo actividades para enviar
+2025-07-26 03:59:06,173 - 1 - Main -                        34 - INFO - Armando listado de actividades estructurado

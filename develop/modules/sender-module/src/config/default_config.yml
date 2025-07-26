@@ -1,10 +1,12 @@
 app:
-  ack_check: true
+  ack_check: false
   message_ack_timeout: 30 # Tiempo maximo de espera del mensaje ACK
   message_types: # Seteo de los nombres para los Tipos de Mensajes
     tle_type: "NEWPLANN"
     plan_type: "PLANN"
     plan_tle_type: "PLANTLE"
+  min_hours_required: 1 # Horas minimas requeridas para la planificacion
+  max_hours_required: 72 # Horas maximas requeridas para la planificacion
 kafka:
   bootstrap_servers: "kafka-broker-1:9092,kafka-broker-2:9092,kafka-broker-3:9092"
   schema_registry_url: "http://schema-registry:8081"
@@ -21,10 +23,10 @@ kafka:
   waiting_time: 30
   max_retries: 5
 database:
-  dbname: "satellite_db"
-  user: "postgres"
-  password: "/pat/to/passwd"
-  host: "localhost"
+  dbname: "planificacion_satelital"
+  user: "planificador_app"
+  password: "/app/password/db_pass"
+  host: "satplan_db"
 logs:
   folder: "logs"
   filename: "PostTLE.log"
