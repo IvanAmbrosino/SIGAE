@@ -180,9 +180,9 @@ CREATE TABLE activity_assignments (
     -- Campos para control de envíos
     send_status VARCHAR(20) DEFAULT 'pending' CHECK (send_status IN ('pending', 'sent', 'failed', 'confirmed')), -- Estado del envio a la antena
     send_action TEXT CHECK (send_action IN ('add', 'update', 'delete', 'reasign')),                              -- Acción que se envió a la antena
-    last_sent_at TIMESTAMPTZ DEFAULT NULL                               -- Fecha/hora del último envío exitoso (luego con el campo updated_at de la actividad)
+    last_sent_at TIMESTAMPTZ DEFAULT NULL,                              -- Fecha/hora del último envío exitoso (luego con el campo updated_at de la actividad)
     retry_count INTEGER DEFAULT 0,                                      -- Contador de reintentos de envío
-    last_attempt_at TIMESTAMPTZ DEFAULT NULL,                           -- Fecha/hora del último
+    last_attempt_at TIMESTAMPTZ DEFAULT NULL                            -- Fecha/hora del último
 );
 
 -- Tabla de reservaciones

@@ -4,6 +4,7 @@ import logging
 from infraestructure.config_manager import ConfigManager
 from infraestructure.database_manager import DatabaseManager
 from application.make_message import MakeMessage
+from domain.class_domain import Activities
 
 class PlanningManager():
     """Clase principal para la obtencion de la planificacion y validacion de la misma"""
@@ -19,6 +20,124 @@ class PlanningManager():
             password=   self.config_manager.read_secret(self.db_configs["password"]),
             host=       self.db_configs["host"]
         )
+        self.activities = {}
+        self.activities_by_antenna = {}
+
+    def send_planning(self):
+        """Funcion que obtiene la planificacion, clasifica las actividades y las envia a las diferentes antenas"""
+        self.logger.info("Iniciando proceso de envio de planificacion")
+        activities = self.get_planning()
+        if not activities:
+            self.logger.info("No hay actividades para enviar")
+            return
+
+        self.logger.info("Armando listado de actividades estructurado")
+        self.activities = Activities(activities).to_dict()
+
+        # Clasificamos las actividades por antena
+        self.clasificar_actividades()
+        if not self.activities_by_antenna:
+            self.logger.info("No hay actividades clasificadas para enviar")
+            return
+
+        # Enviamos los mensajes a las antenas
+        for antenna, messages in self.activities_by_antenna.items():
+            for message in messages:
+                self.make_message.send_message(antenna, message)
+
+    def get_planning(self):
+        """Obtiene la planificacion de actividades a enviar"""
+        self.logger.info("Obteniendo actividades para enviar")
+        self.database_manager.connect()
+        activities = self.database_manager.get_activity_to_send(3, 72)
+        if not activities:
+            self.logger.info("No hay actividades pendientes para enviar")
+            return None
+        self.database_manager.disconnect()
+        return activities
+
+    def clasificar_actividades(self):
+        """
+        Clasifica actividades según su estado y asignaciones
+        
+        Returns
+        
+            - **dict**: Un diccionario con las actividades clasificadas por antena.
+        ```
+            { "antenna_id": [
+                    { 'activity': activity_data, 'assignment': assignment_data o task_data },
+                ]
+            }
+        ```
+        """
+        clasificacion = {
+            'ADD': [],
+            'UPDATE': [],
+            'DELETE': [],
+            'REASSIGN': []
+        }
+
+        for actividad_id, data in self.activities.items():
+            asignaciones = data['asignaciones'] # TASK
+            datos_actividad = data['datos']     # ACTIVITY
+
+            if len(asignaciones) == 1:
+                ultima_asignacion = asignaciones[0]
+                if ultima_asignacion.antenna not in self.activities_by_antenna:
+                    self.activities_by_antenna[ultima_asignacion.antenna] = []
+                # ---------- Actividades nuevas son ADD ------------- #
+                if datos_actividad['status'] == 'authorized':
+                    if ultima_asignacion.send_action == 'pending' and ultima_asignacion.is_confirmed and ultima_asignacion.is_active:
+                        message_add = self.make_message.make_message_add(datos_actividad, ultima_asignacion) # Creamos el mensaje a enviar
+                        self.activities_by_antenna[ultima_asignacion.antenna].append(message_add) # Agregamos a la lista de mensajes para las diferentes antenas
+                        clasificacion['ADD'].append(message_add)
+                        continue
+
+            elif len(asignaciones) > 1:
+
+                asignaciones_ordenadas = sorted(asignaciones, key=lambda x: x['assigned_at'], reverse=True) # Ordenar por 'assigned_at' de forma descendente
+                ultima_asignacion = asignaciones_ordenadas[0] if len(asignaciones_ordenadas) >= 1 else None
+                penultima_asignacion = asignaciones_ordenadas[1] if len(asignaciones_ordenadas) >= 2 else None
+                if ultima_asignacion.antenna not in self.activities_by_antenna:
+                    self.activities_by_antenna[ultima_asignacion.antenna] = []
+
+                # ---------- Actividades canceladas son DELETE ------------- #
+                if datos_actividad['status'] == 'canceled':
+                    if (
+                    ultima_asignacion.send_status == 'pending'
+                    and ultima_asignacion.is_confirmed
+                    and ultima_asignacion.is_active
+                    and penultima_asignacion
+                    and penultima_asignacion.send_status == 'confirmed'
+                    and not penultima_asignacion.is_active):
+                        message_delete = self.make_message.make_message_delete(datos_actividad, ultima_asignacion) # Creamos el mensaje a enviar
+                        self.activities_by_antenna[ultima_asignacion.antenna].append(message_delete) # Agregamos a la lista de mensajes para las diferentes antenas
+                        clasificacion['DELETE'].append(message_delete)
+                        continue
+
+                if datos_actividad['status'] == 'authorized':
+                    if (
+                    ultima_asignacion.send_status == 'pending'
+                    and ultima_asignacion.is_confirmed
+                    and ultima_asignacion.is_active
+                    and penultima_asignacion
+                    and penultima_asignacion.send_status == 'confirmed'
+                    and not penultima_asignacion.is_active):
+                        # ---------- Actividades REASIGNADAS o MODIFICADAS ------------- #
+                        #if ultima_asignacion.antenna != penultima_asignacion.antenna or ultima_asignacion.antenna == penultima_asignacion.antenna: # REASIGNACION en diferente antena
+                        message_reassign = self.make_message.make_message_add(datos_actividad, ultima_asignacion) # Creamos el mensaje a enviar
+                        message_delete = self.make_message.make_message_delete(datos_actividad, penultima_asignacion) # Creamos el mensaje a enviar
+                        if penultima_asignacion.antenna not in self.activities_by_antenna:
+                            self.activities_by_antenna[penultima_asignacion.antenna] = []
+                        self.activities_by_antenna[ultima_asignacion.antenna].append(message_delete) # Agregamos a la lista de mensajes para las diferentes antenas
+                        clasificacion['REASSIGN'].append(message_reassign)
+                        clasificacion['DELETE'].append(message_delete)
+
+            else:
+                self.logger.warning(f"La actividad {actividad_id} no tiene asignaciones")
+                continue
+
+
 
     def obtener_proxima_planificacion(self):
         """Get the next schedule to send"""
@@ -35,47 +154,3 @@ class PlanningManager():
                 self.make_message.make_plann_message(activities_to_send)
 
 
-
-    def test_querrys(self):
-        """Funcion de prueba de las funciones de consulta en la BD"""
-        try:
-            self.database_manager.connect()
-
-            # Ejemplo 1: Consultar actividades entre fechas
-            print("\nEjemplo 1: Consultar actividades entre fechas")
-            start_date = datetime.now()
-            end_date = start_date + timedelta(days=7)
-            activities = self.database_manager.get_activities_between_dates(start_date, end_date)
-
-            print(f"Actividades entre {start_date} y {end_date}:")
-            for activity in activities[:3]:  # Mostrar solo las primeras 3 por brevedad
-                print(f"{activity['satellite_name']} - {activity['start_time']} a {activity['end_time']} - Estado: {activity['status']}")
-
-            # Ejemplo 2: Actualizar estado de una actividad
-            print("\nEjemplo 2: Actualizar estado de actividad")
-            if activities:
-                activity_id = activities[0]['id']
-                if self.database_manager.update_activity_status(activity_id, 'planned'):
-                    print(f"Estado de actividad {activity_id} actualizado a 'planned'")
-
-            # Ejemplo 3: Asignar actividad a antena
-            print("\nEjemplo 3: Asignar actividad a antena")
-            antennas = self.database_manager.get_active_antennas()
-            if activities and antennas:
-                activity_id = activities[0]['id']
-                antenna_id = antennas[0]['id']
-                if self.database_manager.assign_activity_to_antenna(activity_id, antenna_id, 'user-123'):
-                    print(f"Actividad {activity_id} asignada a antena {antenna_id}")
-
-            # Ejemplo 4: Obtener TLE más reciente para un satélite
-            print("\nEjemplo 4: Obtener TLE de satélite")
-            satellite_id = "sat-123"  # Cambiar por ID real
-            tle_data = self.database_manager.get_latest_tle(satellite_id)
-            if tle_data:
-                print(f"TLE más reciente para satélite {satellite_id}:")
-                print(f"Línea 1: {tle_data['line1']}")
-                print(f"Línea 2: {tle_data['line2']}")
-                print(f"Época: {tle_data['epoch']}")
-
-        finally:
-            self.database_manager.disconnect()

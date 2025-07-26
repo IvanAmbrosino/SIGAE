@@ -159,7 +159,7 @@ Las actividades se **filtran** con:
 actividades = get_act_to send() # Busca todas las actividades con asignacion en estado 'pending'
 for act,act_asig in actividades:
     if act.status == 'authorized':
-        if len(asignaciones) == 1:
+        if len(asignaciones) == 1: # Pensar tambien el caso que pase de un estado 'delete' -> 'authorized' (va a tener 2 asignaciones)
             if act_asig.send_action == 'add' and act_asig.send_action == 'pending':
                 message = make_message_delete(act, act_asig)     # Creamos el mensaje a enviar
                 list_messages[act_asign.antenna].append(message) # Agregamos a la lista de mensajes para las diferentes antenas

@@ -40,6 +40,7 @@ class DatabaseManager:
             if fetch:
                 columns = [desc[0] for desc in cursor.description]
                 results = cursor.fetchall()
+                print(results)
                 return [dict(zip(columns, row)) for row in results]
 
             self.connection.commit()
@@ -60,67 +61,62 @@ class DatabaseManager:
         results = self.execute_query(query, (satellite_id,), fetch=True)
         return results[0] if results else None
 
-    def get_activities_to_send(self) -> Optional[List[Dict]]:
+    def get_activity_to_send(self, min_hours_required: int, max_hours_required: int, return_dict : bool = True) -> Optional[List[Dict]]:
         """
-        Get the planning list to be sent
+        Obtiene actividades autorizadas con sus asignaciones relacionadas
+        
+        Retorna una lista de diccionarios con la información de las actividades y sus asignaciones.
         """
         query = """
-        SELECT 
-            act.id AS activity_id,
-            act.satellite_id,
-            act.orbit_number,
-            act.start_time,
-            act.max_elevation_time,
-            act.max_elevation,
-            act.end_time,
-            act.duration,
-            act.status AS activity_status,
-            act.priority,
-            aa.id AS assignment_id,
-            aa.antenna_id,
-            aa.is_confirmed,
-            aa.assigned_at,
-            aa.confirmed_at,
-            ant.name AS antenna_name,
-            ant.code AS antenna_code,
-            sat.name AS satellite_name,
-            ac.config_number AS config_number,
-            CASE
-                WHEN act.status IN ('unassigned') THEN 'delete' -- Actividades canceladas (status cambiado a unassigned)
-                WHEN aa.last_sent_at IS NOT NULL AND act.updated_at > aa.last_sent_at THEN 'update'  -- Actividades modificadas (ya fueron enviadas pero tienen actualizaciones)
-                ELSE 'add'  -- Nuevas actividades que nunca se enviaron
-            END AS required_action,
-            -- Campos para control de envíos
-            act.updated_at,
-            aa.last_sent_at,
-            aa.send_status
-        FROM activities act
-        JOIN activity_assignments aa ON act.id = aa.activity_id -- El primer filtro es si tiene una asignacion
-        JOIN antennas ant ON aa.antenna_id = ant.id             -- Obtenemos los datos de la antena
-        JOIN satellites sat ON act.satellite_id = sat.id        -- Obtenemos los datos del satellite
-        LEFT JOIN activity_configuration ac ON (                -- Obtenemos la configuracion de actividad si existe
-            ac.satellite_id = act.satellite_id 
-            AND ac.antenna_id = aa.antenna_id
-            AND ac.is_active = TRUE
-        )
-        WHERE 
-            -- Filtro por ventana de tiempo relevante
-            act.end_time < NOW() + INTERVAL '72 hour' AND
-            act.start_time > NOW() - INTERVAL '3 year' AND
-            (
-                -- Caso 1: Asignaciones confirmadas que necesitan ser enviadas/actualizadas
-                (aa.is_confirmed = TRUE AND act.status IN ('authorized', 'planned', 'modified', 'updated') AND
-                (aa.last_sent_at IS NULL OR act.updated_at > aa.last_sent_at OR aa.send_status = 'failed'))
-                OR
-                -- Caso 2: Asignaciones que deben ser eliminadas (actividad cancelada)
-                (act.status IN ('unassigned') AND aa.is_confirmed = TRUE AND 
-                (aa.send_status != 'confirmed' OR aa.send_status IS NULL))
+            SELECT
+                -- Campos de la actividad
+                act.id AS activity_id,
+                act.satellite_id,
+                act.orbit_number,
+                act.start_time,
+                act.max_elevation_time,
+                act.max_elevation,
+                act.end_time,
+                act.duration,
+                act.status AS activity_status,
+                act.priority,
+                -- Campos de la asignacion
+                aa.id AS task_id,
+                aa.antenna_id,
+                aa.is_confirmed,
+                aa.assigned_at,
+                aa.confirmed_at,
+                -- Campos de la Antena
+                ant.name AS antenna_name,
+                ant.code AS antenna_code,
+                -- Campos del Satelite
+                sat.name AS satellite_name,
+                -- Campos de la configuracion de actividad
+                ac.config_number AS config_number,
+                act.updated_at,
+                aa.last_sent_at,
+                aa.send_status
+            FROM activities act
+            JOIN activity_assignments aa ON act.id = aa.activity_id -- El primer filtro es si tiene una asignacion
+            JOIN antennas ant ON aa.antenna_id = ant.id             -- Obtenemos los datos de la antena
+            JOIN satellites sat ON act.satellite_id = sat.id        -- Obtenemos los datos del satellite
+            LEFT JOIN activity_configuration ac ON (                -- Obtenemos la configuracion de actividad si existe
+                ac.satellite_id = act.satellite_id 
+                AND ac.antenna_id = aa.antenna_id
+                AND ac.is_active = TRUE                             -- Buscamos solo la activa
             )
-        ORDER BY 
-            act.priority DESC,
-            act.start_time ASC;
+            WHERE 
+                -- Filtro por ventana de tiempo relevante
+                act.end_time < NOW() + INTERVAL '%s hour'
+                AND act.start_time > NOW() - INTERVAL '%s year'
+                -- Filtro de estado de la actividad y asignacion
+                AND act.status IN ('authorized','canceled')
+                AND aa.is_confirmed = TRUE
+                AND aa.send_status IN ('pending', 'failed', 'confirmed')
+
+            ORDER BY act.id, aa.is_active DESC, aa.assigned_at DESC
         """
-        return self.execute_query(query, ('authorized', 72), fetch= True)
+        return self.execute_query(query, (max_hours_required, min_hours_required), fetch= return_dict)
 
     def get_activity_configurations(self) -> List[Dict]:
         """Gets the configurations of the activities to be sent"""
